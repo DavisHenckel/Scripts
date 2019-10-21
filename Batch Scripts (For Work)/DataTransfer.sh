@@ -31,10 +31,29 @@ cd "$destName"
 echo "Current path is: "
 pwd
 echo 
+
 echo "What would you like the Copy folder to be named: "
 read copyFolder
+if [ -f "$copyFolder" ]
+then
+	echo "Directory already exists. Would you like to delete it and start over?(y) (If file is not deleted, it will be appended to)."
+	read theInput
+	if [ $theinput = "y"]
+	then
+		rm -rf $copyFolder
+		echo "Directory $copyFolder deleted."
+		echo "Creating $copyFolder directory"
+		sleep 1
+		mkdir "$copyFolder"
+		echo "Directory $copyFolder created."
+	elif
+		echo "Moving on"
+	fi
+else
+	mkdir "$copyFolder"
+	echo "Directory $copyFolder created."
+fi
 
-mkdir "$copyFolder"
 cd "$copyFolder"
 sleep 1
 mkdir $USER
@@ -45,28 +64,28 @@ mkdir Library
 cd /
 clear
 echo "Check transferLog.txt to view progress & results of data backup"
-echo "Beginning Copy of relevant Library data..." tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo "Beginning Copy of relevant Library data..." | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
 sleep 1
 
-cp -pvr "$fileName"/Library/Google /Volumes/"$destName"/"$copyFolder"/$USER/Library tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt 
-echo "Finished with relevant Library Data!" tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Desktop /Volumes/"$destName"/"$copyFolder"/$USER tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Desktop!" tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Documents /Volumes/"$destName"/"$copyFolder"/$USER tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Documents!" tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Downloads /Volumes/"$destName"/"$copyFolder"/$USER tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Downloads!" tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Movies /Volumes/"$destName"/"$copyFolder"/$USER tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Movies!" tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Pictures /Volumes/"$destName"/"$copyFolder"/$USER tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Pictures!" tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -pvr "$fileName"/Library/Google /Volumes/"$destName"/"$copyFolder"/$USER/Library | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt 
+echo "Finished with relevant Library Data!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -pvr "$fileName"/Desktop /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo "Finished with Desktop!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -pvr "$fileName"/Documents /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo "Finished with Documents!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -pvr "$fileName"/Downloads /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo "Finished with Downloads!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -pvr "$fileName"/Movies /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo "Finished with Movies!" | tee -a /Volumes/"$destName"/"$copyFolder"| /$USER/transferLog.txt
+echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -pvr "$fileName"/Pictures /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo "Finished with Pictures!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+echo --------------------------------------------------------------- |tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
 
 
