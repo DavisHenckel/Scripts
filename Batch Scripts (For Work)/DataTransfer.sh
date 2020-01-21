@@ -1,8 +1,24 @@
-echo "Welcome to the GOAT Script"
-echo
-fileName=/Volumes/Macintosh\ HD/Users/$USER
-echo "The path should be: $fileName"
+#Intro
 
+echo "----------------------------------------------------------------------------"
+echo "This script is designed to transfer user data as efficiently as possible."
+echo "Recommend running caffeinated -dim in a second terminal window while transferring."
+echo "Created by Davis Henckel 10/21/2019"
+echo "Most recent update 01/20/2020"
+echo "----------------------------------------------------------------------------"
+echo
+
+#Getting source
+cd /Volumes/Macintosh\ HD/Users/
+echo "----------------------------------------------------------------------------"
+echo "Available home folders:"
+ls
+echo "----------------------------------------------------------------------------"
+echo "What is the name of the home folder that you want transferred?"
+read userInput
+fileName=/Volumes/Macintosh\ HD/Users/$userInput
+echo "*Note* this script will not transfer any library data or any iCloud data."
+echo "This script will also not transfer any extra items in the root...of the profile"
 echo
 cd /
 cd "$fileName"
@@ -10,82 +26,48 @@ echo "The path is: "
 pwd
 echo
 echo "If this is correct enter "y". If not hit any other key"
-read userInput
-if [ $userInput = "y" ]
+read user_input
+if [ $user_input = "y" ]
 then
-	echo "Great! moving on"
 	echo
 else
-	echo "Failed, do not have correct path.">&2
+	echo "Failed, do not have correct path. Make sure the drive is mounted.">&2
 	exit 1
 fi 
 
-echo
-echo "What is the name of the destination? "
+#Getting destination
+cd /Volumes/
+echo "----------------------------------------------------------------------------"
+echo "Available Volumes.(Make sure the device is mounted):"
+ls
+echo "----------------------------------------------------------------------------"
+echo "What is your destination?"
 read destName
 echo
-
 cd /
 cd Volumes
 cd "$destName"
 echo "Current path is: "
 pwd
 echo 
-
-echo "What would you like the Copy folder to be named: "
+echo "What would you like the destination folder to be named?: "
 read copyFolder
 if [ -f "$copyFolder" ]
 then
-	echo "Directory already exists. Would you like to delete it and start over?(y) (If file is not deleted, it will be appended to)."
-	read theInput
-	if [ $theinput = "y"]
-	then
-		rm -rf $copyFolder
-		echo "Directory $copyFolder deleted."
-		echo "Creating $copyFolder directory"
-		sleep 1
-		mkdir "$copyFolder"
-		echo "Directory $copyFolder created."
-	elif
-		echo "Moving on"
-	fi
-else
-	mkdir "$copyFolder"
-	echo "Directory $copyFolder created."
+	echo "Directory already exists! Delete it first or pick a different name."
+	exit 1
 fi
-
+mkdir "$copyFolder"
 cd "$copyFolder"
-sleep 1
-mkdir $USER
-cd $USER
-touch transferLog.txt
-mkdir Library
-
+mkdir $userInput
+cd "$userInput"
+echo "Destination is: "
+destin=/Volumes/"$destName"/"$copyFolder"/$userInput/
+echo $destin
 cd /
-clear
-echo "Check transferLog.txt to view progress & results of data backup"
-echo "Beginning Copy of relevant Library data..." | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-sleep 1
 
-cp -pvr "$fileName"/Library/Google /Volumes/"$destName"/"$copyFolder"/$USER/Library | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt 
-echo "Finished with relevant Library Data!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Desktop /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Desktop!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Documents /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Documents!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Downloads /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Downloads!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Movies /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Movies!" | tee -a /Volumes/"$destName"/"$copyFolder"| /$USER/transferLog.txt
-echo --------------------------------------------------------------- | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-cp -pvr "$fileName"/Pictures /Volumes/"$destName"/"$copyFolder"/$USER | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo "Finished with Pictures!" | tee -a /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
-echo --------------------------------------------------------------- |tee /Volumes/"$destName"/"$copyFolder"/$USER/transferLog.txt
+cp -vr "$fileName"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+
+echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
 
 
