@@ -2,7 +2,7 @@
 
 echo "----------------------------------------------------------------------------"
 echo "This script is designed to transfer user data as efficiently as possible."
-echo "Recommend running caffeinated -dim in a second terminal window while transferring."
+echo "Recommend running caffeinate -dim in a second terminal window while transferring."
 echo "Created by Davis Henckel 10/21/2019"
 echo "Most recent update 01/20/2020"
 echo "----------------------------------------------------------------------------"
