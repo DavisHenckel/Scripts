@@ -11,10 +11,10 @@ echo
 #Getting source--------------------------------------------------------------------------------
 cd /Volumes/Macintosh\ HD/Users/
 echo "----------------------------------------------------------------------------"
-echo "Available home folders:"
+echo "Available home folders for transfer:"
 ls
 echo "----------------------------------------------------------------------------"
-echo "Is there more than one home folder(enter y if yes)?: "
+echo "Is there more than one home folder(enter \"y\" if yes, press any other key if no)?: "
 read userInput
 
 #Initialize folders for the 5 possible profiles.
@@ -27,8 +27,15 @@ fifthFolder=""
 #More than one profile----------------------------------------------------------------------------
 if [ $userInput = "y" ]
 then
-	echo "How many are there, can transfer up to 5(Enter an integer)?"
-	read howMany
+	while [ true ]
+	do
+		echo "How many are there, can transfer up to 5(Enter an integer)?"
+		read howMany
+		if [ $howMany = "1" ] || [ $howMany = "2" ] || [ $howMany = "3" ] || [ $howMany = "4" ] || [ $howMany = "5" ]
+		then
+			break
+		fi
+	done
 	for (( i=0;i<$howMany;i++ ))
 	do
 		curVal=`expr $i + 1`
@@ -109,7 +116,7 @@ echo "What would you like the destination folder to be named?: "
 read copyFolder
 if [ -f "$copyFolder" ]
 then
-	echo "Directory already exists! Delete it first or pick a different name."
+	echo "Directory already exists! Delete it first or pick a different name.">&2
 	exit 1
 fi
 mkdir "$copyFolder"
@@ -126,7 +133,7 @@ then
 	echo $destin
 fi
 
-#Keep machine awake.
+#Keep machine awake in the background.
 caffeinate -dim &
 
 #There are multiple profiles---------------------------------------------------------------------------
@@ -208,7 +215,10 @@ then
 	cd /
 	cp -vr "$fileName"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
 fi
+
+#End of script
 echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
+trap "killall background" EXIT #Kills caffeinate command.
 exit 0
 
 
