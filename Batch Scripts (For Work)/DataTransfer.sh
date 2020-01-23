@@ -1,5 +1,4 @@
 #Intro
-#!/bin/bash
 echo "----------------------------------------------------------------------------"
 echo "This script is designed to transfer user data as efficiently as possible."
 echo "*Note* this script will not transfer any library data or any iCloud data."
