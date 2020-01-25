@@ -14,15 +14,25 @@ echo "--------------------------------------------------------------------------
 echo "Available home folders for transfer:"
 ls
 echo "----------------------------------------------------------------------------"
-echo "Is there more than one home folder(enter \"y\" if yes, press any other key if no)?: "
-read userInput
+while [ true ]
+do
+	echo "Is there more than one home folder(y/n)?: "
+	read userInput
+	if [ $userInput = "y" ]
+	then
+		break
+	elif [ $userInput = "n" ]
+	then
+		break
+	fi
+done
 
 #Initialize folders for the 5 possible profiles.
-firstFolder=""
-secondFolder=""
-thirdFolder=""
-fourthFolder=""
-fifthFolder=""
+firstFolder="e"
+secondFolder="e"
+thirdFolder="e"
+fourthFolder="e"
+fifthFolder="e"
 
 #More than one profile----------------------------------------------------------------------------
 if [ $userInput = "y" ]
@@ -74,8 +84,18 @@ else
 	echo "The path is: "
 	pwd
 	echo
-	echo "If this is correct enter "y". If not hit any other key"
-	read user_input
+	while [ true ]
+	do
+		echo "Is this path correct? (y/n)"
+		read user_input
+		if [ $user_input = "y" ]
+		then
+			break
+		elif [ $user_input = "n" ]
+		then
+			break
+		fi
+	done
 	if [ $user_input = "y" ]
 	then
 		echo
@@ -100,8 +120,18 @@ cd Volumes
 cd "$destName"
 echo "Current path is: "
 pwd
-echo "If this is correct enter "y". If not hit any other key"
-read user_input
+while [ true ]
+do
+	echo "If this is correct enter "y". If not hit any other key"
+	read user_input
+	if [ $user_input = "y" ]
+	then
+		break
+	elif [ $user_input = "n" ]
+	then
+		break
+	fi
+done
 if [ $user_input = "y" ]
 then
 	echo
@@ -124,7 +154,7 @@ cd "$copyFolder"
 #End of destination folder name------------------------------------------------------------------------
 
 #Only execute this if there is only one profile.
-if [ $firstFolder = "" ]
+if [ $firstFolder = "e" ]
 then
 	mkdir $userInput
 	cd "$userInput"
@@ -133,11 +163,9 @@ then
 	echo $destin
 fi
 
-#Keep machine awake in the background.
-caffeinate -dim &
 
 #There are multiple profiles---------------------------------------------------------------------------
-if [ $firstFolder != "" ]
+if [ $firstFolder != "e" ]
 then
 	cd /
 	cd Volumes/"$destName"/"$copyFolder"
@@ -152,7 +180,7 @@ then
 		exit 0
 	fi 
 fi 
-if [ $secondFolder != "" ]
+if [ $secondFolder != "e" ]
 then
 	cd /
 	cd Volumes/"$destName"/"$copyFolder"
@@ -167,7 +195,7 @@ then
 		exit 0
 	fi 
 fi 
-if [ $thirdFolder != "" ]
+if [ $thirdFolder != "e" ]
 then
 	cd /
 	cd Volumes/"$destName"/"$copyFolder"
@@ -182,7 +210,7 @@ then
 		exit 0
 	fi 
 fi 
-if [ $fourthFolder != "" ]
+if [ $fourthFolder != "e" ]
 then
 	cd /
 	cd Volumes/"$destName"/"$copyFolder"
@@ -197,7 +225,7 @@ then
 		exit 0
 	fi 
 fi 
-if [ $fifthFolder != "" ]
+if [ $fifthFolder != "e" ]
 then
 	cd /
 	cd Volumes/"$destName"/"$copyFolder"
@@ -210,7 +238,7 @@ fi
 #End of multiple profiles ---------------------------------------------------------------------------
 
 #If there is only one profile
-if [ $firstFolder = "" ]
+if [ $firstFolder = "e" ]
 then
 	cd /
 	cp -vr "$fileName"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
@@ -218,7 +246,6 @@ fi
 
 #End of script
 echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
-trap "killall background" EXIT #Kills caffeinate command.
 exit 0
 
 
