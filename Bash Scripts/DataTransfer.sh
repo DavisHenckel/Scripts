@@ -11,6 +11,8 @@ echo "--------------------------------------------------------------------------
 echo "Enter the name of the Mac HDD:"
 cd /Volumes
 ls
+#caffeinate -dim &
+#caffeinatePID=$!
 echo "----------------------------------------------------------------------------"
 read volName
 #Getting source--------------------------------------------------------------------------------
@@ -127,7 +129,7 @@ echo "Current path is: "
 pwd
 while [ true ]
 do
-	echo "If this is correct enter "y". If not hit any other key"
+	echo "Is this correct?(y/n)"
 	read user_input
 	if [ $user_input = "y" ]
 	then
@@ -178,12 +180,15 @@ then
 	cd /
 	firstSource=/Volumes/"$volName"/Users/$firstFolder
 	destin=/Volumes/"$destName"/"$copyFolder"/$firstFolder/
-	cp -vr "$firstSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+	cp -vr "$firstSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public,*.*} "$destin"
+	myPID=$!
 	if [ $howMany = "1" ]
 	then
+		wait $myPID
 		echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
 		exit 0
-	fi 
+	fi
+	wait $myPID 
 fi 
 if [ $secondFolder != "e" ]
 then
@@ -193,12 +198,15 @@ then
 	cd /
 	secondSource=/Volumes/"$volName"/Users/$secondFolder
 	destin=/Volumes/"$destName"/"$copyFolder"/$secondFolder/
-	cp -vr "$secondSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+	cp -vr "$secondSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public,*.*} "$destin"
+	myPID=$!
 	if [ $howMany = "2" ]
 	then
+		wait $myPID
 		echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
 		exit 0
-	fi 
+	fi
+	wait $myPID 
 fi 
 if [ $thirdFolder != "e" ]
 then
@@ -208,12 +216,15 @@ then
 	cd /
 	thirdSource=/Volumes/"$volName"/Users/$thirdFolder
 	destin=/Volumes/"$destName"/"$copyFolder"/$thirdFolder/
-	cp -vr "$thirdSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+	cp -vr "$thirdSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public,*.*} "$destin"
+	myPID=$!
 	if [ $howMany = "3" ]
 	then
+		wait $myPID 
 		echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
 		exit 0
-	fi 
+	fi
+	wait $myPID  
 fi 
 if [ $fourthFolder != "e" ]
 then
@@ -223,12 +234,15 @@ then
 	cd /
 	fourthSource=/Volumes/"$volName"/Users/$fourthFolder
 	destin=/Volumes/"$destName"/"$copyFolder"/$fourthFolder/
-	cp -vr "$fourthSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+	cp -vr "$fourthSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public,*.*} "$destin"
+	myPID=$!
 	if [ $howMany = "4" ]
 	then
+		wait $myPID
 		echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
 		exit 0
 	fi 
+	wait $myPID
 fi 
 if [ $fifthFolder != "e" ]
 then
@@ -238,7 +252,9 @@ then
 	cd /
 	fifthSource=/Volumes/"$volName"/Users/$fifthFolder
 	destin=/Volumes/"$destName"/"$copyFolder"/$fifthFolder/
-	cp -vr "$fifthSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+	cp -vr "$fifthSource"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public,*.*} "$destin"
+	myPID=$!
+	wait $myPID
 fi
 #End of multiple profiles ---------------------------------------------------------------------------
 
@@ -246,10 +262,14 @@ fi
 if [ $firstFolder = "e" ]
 then
 	cd /
-	cp -vr "$fileName"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public} "$destin"
+	cp -vr "$fileName"/{Desktop,Documents,Downloads,Movies,Music,Pictures,Public,*.*} "$destin"
+	myPID=$!
+	wait $myPID
 fi
 
 #End of script
+wait $myPID
+#kill $caffeinatePID
 echo "Transfer Complete! Verify the data is accurate and transfer anything else relevant once in the OS!"
 exit 0
 
