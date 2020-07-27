@@ -1,10 +1,11 @@
+# Created by Davis Henckel 10/21/2019
+# Most recent update 01/22/2020
+
 #Intro
 echo "----------------------------------------------------------------------------"
 echo "This script is designed to transfer user data as efficiently as possible."
 echo "*Note* this script will not transfer any library data or any iCloud data."
 echo "This script will also not transfer any extra items in the root of the profile"
-echo "Created by Davis Henckel 10/21/2019"
-echo "Most recent update 01/22/2020"
 echo "----------------------------------------------------------------------------"
 echo
 
