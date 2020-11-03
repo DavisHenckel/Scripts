@@ -7,8 +7,9 @@ Function MenuPrompt {
         Write-Host Outlook Repair Tool Menu -ForegroundColor Green
         Write-Host ====================================================================================== -ForegroundColor DarkCyan
         Write-Host Available Options:`n 
+        Write-Host 0: Run all commands in sequence -ForegroundColor DarkYellow
         Write-Host 1: Export PST data -ForegroundColor DarkYellow
-        Write-Host 2: Close Outlook and Skype -ForegroundColor DarkYellow
+        Write-Host 2: Close Outlook`, Teams`, and Skype -ForegroundColor DarkYellow
         Write-Host 3: Delete ALL Outlook profiles -ForegroundColor DarkYellow
         Write-Host 4: Delete Outlook profile application data -ForegroundColor DarkYellow
         Write-Host 5: Create new Outlook profiles -ForegroundColor DarkYellow
@@ -20,7 +21,7 @@ Function MenuPrompt {
         if ($userinput -eq '8') {
             exit(0)
         }
-        if ($userInput -eq '1' -or $userInput -eq '2' -or $userInput -eq '3' -or $userInput -eq '4' -or $userInput -eq '5' -or $userInput -eq '6' -or $userInput -eq '7') {
+        if ($userInput -eq '1' -or $userInput -eq '2' -or $userInput -eq '3' -or $userInput -eq '4' -or $userInput -eq '5' -or $userInput -eq '6' -or $userInput -eq '7' -or $userInput -eq '0') {
             return $userInput
         }
         else {
@@ -50,31 +51,43 @@ Function ExportPSTInfo {
         foreach($pst in $pstObjects)
         {
             cd $desktopPath
+            Write-Host Writing $pst.FilePath to PST Files.txt
             $pst.FilePath | Out-File "PST Files.txt" -Append #add the PST path to the file
-            $counter += 1 #increment the counter
         }
         Write-Host "All Imported PST file paths written to file on Desktop titled: PST Files.txt" -ForegroundColor Green
     }
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
 }
 
-#Closes Outlook and Skype, they must be closed to perform profile deletion along with other things
+#Closes Outlook, Teams, and Skype. They must be closed to perform profile deletion along with other things
 Function CloseOutlook {
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
     Write-Host Closing Programs... -ForegroundColor DarkGreen
     $OutlookPID = Get-Process -Name outlook -ErrorAction SilentlyContinue
     if (-not $?)  { 
+        Write-Host `nOutlook wasn`'t open. -ForegroundColor DarkGreen
     }
     else {
         Stop-Process $OutlookPID
-        Write-Host "`nOutlook Closed" -ForegroundColor Green
+        Write-Host "`nOutlook Closed" -ForegroundColor DarkGreen
     }
+    Start-Sleep 1
     $SkypePID = Get-Process -Name lync -ErrorAction SilentlyContinue
     if (-not $?) { 
+        Write-Host `nSkype wasn`'t open. -ForegroundColor DarkGreen
     }
     else {
         Stop-Process $SkypePID 
-        Write-Host "`nSkype Closed" -ForegroundColor Green
+        Write-Host "`nSkype Closed" -ForegroundColor DarkGreen
+    }
+    Start-Sleep 1
+    $TeamsPID = Get-Process -Name "Teams" -ErrorAction SilentlyContinue
+    if (-not $?) {
+        Write-Host `nTeams wasn`'t open. -ForegroundColor DarkGreen
+    }
+    else {
+        Stop-Process $TeamsPID
+        Write-Host "`nTeams Closed" -ForegroundColor DarkGreen
     }
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
 
@@ -112,7 +125,7 @@ Function ImportPSTs {
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
 }
 
-#Deletes Outlook profiles using registry editor
+#Deletes Outlook profiles by deleting reg keys
 Function DeleteProfiles {
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
     Write-Host Before you do this`, be sure to notate any shared mailboxes as they won`'t be`n re-imported. Also be aware this deletes all Outlook profiles, not just the active one. -ForegroundColor Red
@@ -126,7 +139,7 @@ Function DeleteProfiles {
         }
         Write-Host Invalid Input. Please enter y or n. -ForegroundColor Red
     }
-    Write-Host "Deleting Outlook Profiles..." -ForegroundColor 
+    Write-Host "Deleting Outlook Profiles..." -ForegroundColor DarkGreen
     $regPath="HKCU:\Software\Microsoft\Office\16.0\Outlook\Profiles" #defines registry path for Outlook 2016
     $profiles=(Get-ChildItem -Path $regPath).Name 
     foreach($prof in $profiles) #find every child item (every profile)
@@ -136,11 +149,11 @@ Function DeleteProfiles {
     $profiles=(Get-ChildItem -Path $regPath).Name
     if (-not $profiles) #if the profiles are empty
     {
-        Write-Host "Profiles removed successfully`n" -ForegroundColor Green
+        Write-Host "Profiles removed successfully`n" -ForegroundColor DarkGreen
     }
     else #a profile still exists
     {
-        Write-Host "ERROR! Not all profiles removed.`n" -ForegroundColor Red
+        Write-Host "ERROR! Not all profiles removed.`n" -ForegroundColor DarkRed
     }
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
 }
@@ -154,18 +167,18 @@ Function DeleteAppdata {
     Write-Host "Before Deleting items in Local Appdata...`n" -ForegroundColor DarkGreen
     dir -Force #print current directory pre deletion
     Start-Sleep -s 5
-    Remove-Item * -Include *.ost, *.obi, *.inf, *.xml, *.tmp, *.dat -Force -ErrorAction SilentlyContinue -Exclude *pst, *ASK ODOT*, *ASK_ODOT*, *ASKODOT* #delete all garbage files
-    Remove-Item "Offline Address Books", "RoamCache" -Recurse -ErrorAction SilentlyContinue #delete all garbage files
+    Remove-Item * -Include *.ost, *.obi, *.inf, *.xml, *.tmp, *.nst, *.log, *.dat, ~* -Exclude *.pst -Force
+    Remove-Item "Offline Address Books", "RoamCache" -Recurse -ErrorAction SilentlyContinue  -Force
     Write-Host "`nAfter Deleting...`n" -ForegroundColor DarkGreen
     dir -Force #print current directory post deletion
-    Write-Host "`n=====================================================================================`n" -ForegroundColor Cyan
+    Write-Host "`n=====================================================================================`n" -ForegroundColor DarkCyan
 
     Start-Sleep -s 3
     cd $roamingAppData #navigate to roaming appdata
     Write-Host "Before deleting items in Roaming Appdata...`n" -ForegroundColor DarkGreen
     dir -Force #print current directory pre deletion
     Start-Sleep -s 5
-    Remove-Item * -Include *.srs, *.xml -Force -Exclude *pst, *ASK ODOT*, *ASK_ODOT*, *ASKODOT* -ErrorAction SilentlyContinue #delete all garbage items
+    Remove-Item * -Include *.srs, *.xml, *.log, *.dat, ~* -Exclude *pst -Force
     Write-Host "`nAfter Deleting...`n" -ForegroundColor DarkGreen
     dir  -Force #print current directory post deletion
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
@@ -186,6 +199,7 @@ Function InterpretInput($userInput) {
     $userInput = [int]$userInput
     #Typically these would be run in sequence, if all goes well
     Switch ($userInput) {
+        0 { RunAll }
         1 { ExportPSTInfo }
         2 { CloseOutlook }
         3 { DeleteProfiles }
@@ -194,6 +208,23 @@ Function InterpretInput($userInput) {
         6 { OpenOutlook }
         7 { ImportPSTs }
     }
+}
+
+#Runs every command in sequence
+Function RunAll {
+    ExportPSTInfo
+    Start-Sleep 1
+    CloseOutlook
+    Start-Sleep 1
+    DeleteProfiles
+    Start-Sleep 1
+    DeleteAppData
+    Start-Sleep 1
+    CreateNewProfile
+    Start-Sleep 1
+    OpenOutlook
+    Start-Sleep 1
+    ImportPSTs
 }
 
 #Main Script that displays the prompt until the user presses CTRL C or presses 8 to exit. Pauses breifly after each function to show output
