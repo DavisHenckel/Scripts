@@ -50,7 +50,7 @@ Function ExportPSTInfo {
         $pstObjects.size
         foreach($pst in $pstObjects)
         {
-            cd $desktopPath
+            Set-Location $desktopPath
             Write-Host Writing $pst.FilePath to PST Files.txt
             $pst.FilePath | Out-File "PST Files.txt" -Append #add the PST path to the file
         }
@@ -119,7 +119,7 @@ Function ImportPSTs {
     $thePSTs = (Get-Content -Path $pstPath) #store all PSTs in $thePSTs
     foreach($path in $thePSTs)
     {
-        dir “$path” | % { $namespace.AddStore($_.FullName) } #import all PSTs into the new profile
+        Get-ChildItem “$path” | ForEach-Object { $namespace.AddStore($_.FullName) } #import all PSTs into the new profile
     }
     Remove-Item $pstPath #Delete file after import complete.
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
@@ -163,24 +163,24 @@ Function DeleteAppdata {
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
     [string] $roamingAppData = $env:APPDATA + "/Microsoft/Outlook/" #define roamingAppData path
     [string] $localAppData = $roamingAppData + "../../../local/Microsoft/Outlook/"#define localAppData path
-    cd $localAppData #navigate to local Appdata
+    Set-Location $localAppData #navigate to local Appdata
     Write-Host "Before Deleting items in Local Appdata...`n" -ForegroundColor DarkGreen
-    dir -Force #print current directory pre deletion
+    Get-ChildItem -Force #print current Get-ChildItemectory pre deletion
     Start-Sleep -s 5
     Remove-Item * -Include *.ost, *.obi, *.inf, *.xml, *.tmp, *.nst, *.log, *.dat, ~* -Exclude *.pst -Force
     Remove-Item "Offline Address Books", "RoamCache" -Recurse -ErrorAction SilentlyContinue  -Force
     Write-Host "`nAfter Deleting...`n" -ForegroundColor DarkGreen
-    dir -Force #print current directory post deletion
+    Get-ChildItem -Force #print current Get-ChildItemectory post deletion
     Write-Host "`n=====================================================================================`n" -ForegroundColor DarkCyan
 
     Start-Sleep -s 3
-    cd $roamingAppData #navigate to roaming appdata
+    Set-Location $roamingAppData #navigate to roaming appdata
     Write-Host "Before deleting items in Roaming Appdata...`n" -ForegroundColor DarkGreen
-    dir -Force #print current directory pre deletion
+    Get-ChildItem -Force #print current Get-ChildItemectory pre deletion
     Start-Sleep -s 5
     Remove-Item * -Include *.srs, *.xml, *.log, *.dat, ~* -Exclude *pst -Force
     Write-Host "`nAfter Deleting...`n" -ForegroundColor DarkGreen
-    dir  -Force #print current directory post deletion
+    Get-ChildItem  -Force #print current Get-ChildItemectory post deletion
     Write-Host ====================================================================================== -ForegroundColor DarkCyan
 }
 

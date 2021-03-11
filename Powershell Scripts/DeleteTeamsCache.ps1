@@ -16,7 +16,7 @@ Stop-Process -Name "Teams" -ErrorAction SilentlyContinue
 
 ForEach ($path in $paths)
 {
-    cd $path -ErrorAction SilentlyContinue
+    Set-Location $path -ErrorAction SilentlyContinue
     Remove-Item * -Recurse -ErrorAction SilentlyContinue
 }
 #[string] $teamsPath = $env:LOCALAPPDATA + '\Microsoft\Teams\'
