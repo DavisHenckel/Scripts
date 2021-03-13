@@ -29,18 +29,18 @@ Function UserInputToParameters ($UserInfoArgs) { #Interprets the user input and 
     $ModifiedParams = [System.Collections.ArrayList]@()
     for ($i = 0; $i -lt $UserInfoArgs.Length; $i++) {
         if ($i -eq 0) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept / Location: ","")
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve extra space if it exists
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve all spaces 
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
             $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,3) #take only next 3 chars
             if ($UserInfoArgs[$i].Length -ne 3) {
-                Write-Host ("ERROR, Location Code is not 3 digits or contains invalid characters. Enter the correct Location Code:`n")
+                Write-Host ("ERROR, Location Code is not 3 digits Enter the correct Location Code:`n")
                 $UserInfoArgs[$i] = Read-Host
             }
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers
         }
         if ($i -eq 1) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Employee Number:","")
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve extra space if it exists
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve all spaces
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("EmployeeNumber:","")
             if ($UserInfoArgs[$i].Length -ne 4) {
                 Write-Host ("ERROR, Employee ID is not 4 digits or contains invalid characters. Enter the correct Employee ID:`n")
                 $UserInfoArgs[$i] = Read-Host 
@@ -78,14 +78,14 @@ Function ConfirmInputCorrect($ModifiedParams) {
         for ($i = 0; $i -lt 4; $i++) {
             switch ($i) {
                 0 { $temp = $ModifiedParams[$i]
-                    Write-Host("Location Code:`n$temp`n")}
+                    Write-Host("Location Code:$temp`n")}
                 1 { $temp = $ModifiedParams[$i]
-                    Write-Host("Employee ID:`n$temp`n")}
+                    Write-Host("Employee ID:$temp`n")}
                 2 { $temp = $ModifiedParams[$i]
-                    Write-Host("User Name:`n$temp`n")}
+                    Write-Host("User Name:$temp`n")}
                 3 { $temp = $ModifiedParams[$i]
-                    Write-Host("Job Title:`n$temp`n")}
-                default { Write-Host("This won't ever happen")}
+                    Write-Host("Job Title:$temp`n")}
+                default { Write-Host("This won't ever happen. Everything you know is a lie")}
             }
         }
         $UserInput = Read-Host -Prompt ("Is this data correct? (y/n)")
@@ -102,11 +102,18 @@ Function ConfirmInputCorrect($ModifiedParams) {
     }
     return $UserInput
 } 
-Function Main { #Main function -- Don't need this. Just for my organization
+Function Main { #Main function -- Don't need this to be a function... Just for my organization
     $UserInfoData = GetUserInput
     $ModifiedParams = UserInputToParameters($UserInfoData)
     $Proceed = ConfirmInputCorrect($ModifiedParams)
+    $Arg1 = $ModifiedParams[0]
+    $Arg2 = $ModifiedParams[1]
+    $Arg3 = $ModifiedParams[2]
+    $Arg4 = $ModifiedParams[3]
+    $ArgumentList = "-LocNum $Arg1 -EmpNum $Arg2 -Name `"$Arg3`" -JobTitle `"$Arg4`""
     if ($Proceed -eq 'y' -or $Proceed -eq 'Y') {
+        $ScriptPath= $PSScriptRoot+"\test.ps1"
+        Invoke-Expression "& `"$ScriptPath`" $ArgumentList"
         #Call newUserScript and pass $ModifiedParams[0], $ModifiedParams[1], $ModifiedParams[2], $ModifiedParams[3]
         #These are location number, Employee number, Users Name, and Job Title respectively
     }
