@@ -114,7 +114,7 @@ Function ValidateInput ($UserInfoArgs) {
 #0: [data]          //Location Number
 #1: [data]          //Employee Number
 #2: [data]          //User Name
-#3: [data]          //Preferred Name for Email
+#3: [data]          //Preferred Name for Email (may be empty)
 #4: [data]          //Job Title
 Function UserInputToParameters ($UserInfoArgs) { 
     $ModifiedParams = [System.Collections.ArrayList]@()
@@ -223,7 +223,7 @@ Function ConfirmInputCorrect($ModifiedParams) {
 #Main function -- Don't need this to be a function. Just for my organization
 Function Main { 
     $Proceed = 'N'
-    while($Proceed -ne 'y' -or $Proceed -ne 'Y') {
+    while($Proceed -ne 'y' -or $Proceed -ne 'Y') { #loop forever until user says input is correct
         [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank lines ensures there are at least 4 lines
         $UserInfoData = ValidateInput($UserInfoData) #deletes lines that are not relevant and ensures there are 4 lines that contain the variables we want
         [System.Collections.ArrayList]$ModifiedParams = UserInputToParameters($UserInfoData) #Parses the data and stores the 4 variables to pass to the new user script
