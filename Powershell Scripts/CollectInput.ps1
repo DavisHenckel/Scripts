@@ -22,6 +22,12 @@ Function GetUserInput { #Collects user input based off template sent from HR Thi
         $InputParams.Add($UserInput) | Out-Null #prevent adding integers
 
     }
+    if($InputParams.Count -lt 3) {
+        Write-Host "Not enough input given. Restarting program...."
+        Start-Sleep -s 1.5
+        Clear-Host
+        GetUserInput
+    }
     return $InputParams
 }
 
@@ -88,11 +94,7 @@ Function UserInputToParameters ($UserInfoArgs) { #Interprets the user input and 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
             $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,3) #take only next 3 chars
             if ($UserInfoArgs[$i].Length -ne 3) {
-<<<<<<< HEAD
                 Write-Host ("ERROR, Location Code is not 3 digits. Enter the correct Location Code:`n")
-=======
-                Write-Host ("ERROR, Location Code is not 3 digits Enter the correct Location Code:`n")
->>>>>>> 7d3bedfee3ce62ea4235cbf7959039d4309378ef
                 $UserInfoArgs[$i] = Read-Host
             }
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers
@@ -116,7 +118,7 @@ Function UserInputToParameters ($UserInfoArgs) { #Interprets the user input and 
                 continue
             }
             else {
-                $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Preferred Name for Email: ","")
+                $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("PreferredNameforEmail:","")
                 $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("."," ") #Replace . with space to fit name format    
                 $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('@'))
                 $ModifiedParams[2] = $UserInfoArgs[$i] # set name to be the email name.                
@@ -131,12 +133,11 @@ Function UserInputToParameters ($UserInfoArgs) { #Interprets the user input and 
     return $ModifiedParams
 }
 
-Function ConfirmInputCorrect($ModifiedParams) {
+Function ConfirmInputCorrect($ModifiedParams) { #Returns boolean
     while(1) {
         Write-Host("Data Collected:`n================`n ")
         for ($i = 0; $i -lt 4; $i++) {
             switch ($i) {
-<<<<<<< HEAD
                 0 { $ToPrint = $ModifiedParams[$i]
                     Write-Host("Location Code:$ToPrint`n")}
                 1 { $ToPrint = $ModifiedParams[$i]
@@ -146,17 +147,6 @@ Function ConfirmInputCorrect($ModifiedParams) {
                 3 { $ToPrint = $ModifiedParams[$i]
                     Write-Host("Job Title:$ToPrint`n")}
                 default { Write-Host("This won't ever happen")}
-=======
-                0 { $temp = $ModifiedParams[$i]
-                    Write-Host("Location Code:$temp`n")}
-                1 { $temp = $ModifiedParams[$i]
-                    Write-Host("Employee ID:$temp`n")}
-                2 { $temp = $ModifiedParams[$i]
-                    Write-Host("User Name:$temp`n")}
-                3 { $temp = $ModifiedParams[$i]
-                    Write-Host("Job Title:$temp`n")}
-                default { Write-Host("This won't ever happen. Everything you know is a lie")}
->>>>>>> 7d3bedfee3ce62ea4235cbf7959039d4309378ef
             }
         }
         $UserInput = Read-Host -Prompt ("Is this data correct? (y/n)")
@@ -164,36 +154,38 @@ Function ConfirmInputCorrect($ModifiedParams) {
             break
         }
         if ($UserInput -eq 'n' -or $UserInput -eq 'N') {
-            Write-Host("Closing Script, try again...")
-            cmd /c pause
-            exit
+            break
         }
         Clear-Host
         Write-Host("Invalid Input. Enter (y/n)`n")
     }
     return $UserInput
 } 
-<<<<<<< HEAD
-Function Main { #Main function -- Don't need this. Just for my organization
-    [System.Collections.ArrayList]$UserInfoData = GetUserInput
-    [System.Collections.ArrayList]$ModifiedData = ValidateInput($UserInfoData)
-    [System.Collections.ArrayList]$ModifiedParams = UserInputToParameters($ModifiedData)
-=======
-Function Main { #Main function -- Don't need this to be a function... Just for my organization
-    $UserInfoData = GetUserInput
-    $ModifiedParams = UserInputToParameters($UserInfoData)
->>>>>>> 7d3bedfee3ce62ea4235cbf7959039d4309378ef
-    $Proceed = ConfirmInputCorrect($ModifiedParams)
-    $Arg1 = $ModifiedParams[0]
-    $Arg2 = $ModifiedParams[1]
-    $Arg3 = $ModifiedParams[2]
-    $Arg4 = $ModifiedParams[3]
-    $ArgumentList = "-LocNum $Arg1 -EmpNum $Arg2 -Name `"$Arg3`" -JobTitle `"$Arg4`""
+Function Main { #Main function -- Don't need this to be a function. Just for my organization
+    $Proceed = 'N'
+    while($Proceed -ne 'y' -or $Proceed -ne 'Y') {
+        [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank lines
+        $UserInfoData = ValidateInput($UserInfoData) #deletes lines that are not relevant
+        [System.Collections.ArrayList]$ModifiedParams = UserInputToParameters($UserInfoData) #Parses the data and stores the 4 variables to pass to the new user script
+        $Proceed = ConfirmInputCorrect($ModifiedParams) #get new value for proceed y if user selects y, n if user selects n. Will loop until 
+    }
     if ($Proceed -eq 'y' -or $Proceed -eq 'Y') {
+        $Arg1 = $ModifiedParams[0]
+        $Arg2 = $ModifiedParams[1]
+        $Arg3 = $ModifiedParams[2]
+        $Arg4 = $ModifiedParams[3]
+        $ArgumentList = "-LocNum $Arg1 -EmpNum $Arg2 -Name `"$Arg3`" -JobTitle `"$Arg4`""
         $ScriptPath= $PSScriptRoot+"\test.ps1"
-        Invoke-Expression "& `"$ScriptPath`" $ArgumentList"
-        #Call newUserScript and pass $ModifiedParams[0], $ModifiedParams[1], $ModifiedParams[2], $ModifiedParams[3]
-        #These are location number, Employee number, Users Name, and Job Title respectively
+        Invoke-Expression "& `"$ScriptPath`" $ArgumentList" 
+    }
+    elseif ($Proceed -eq 'N' -or $Proceed -eq 'n') { 
+        Clear-Host
+        continue
+    }
+    else {
+        Write-Host "Proceed is not y or n...something is wrong...`nExiting"
+        cmd /c pause
+        exit
     }
 }
 
