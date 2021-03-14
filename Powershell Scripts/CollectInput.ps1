@@ -40,7 +40,7 @@ Function GetUserInput {
 #0: Dept / Location: [data]
 #1: Employee Number:[data]
 #2: User Name:[data]
-#3: Preferred Name for Email:[data]
+#3: Preferred Name for Email: [data]
 #4: Job Title: [data]
 Function ValidateInput ($UserInfoArgs) { 
 
@@ -190,7 +190,8 @@ Function UserInputToParameters ($UserInfoArgs) {
     return $ModifiedParams
 }
 
- #Returns Boolean that indicates if the input looks correct to the user.
+#Prints output of the 4 variables obtained from the earlier steps. 
+#Returns Boolean that indicates if the input looks correct to the user.
 Function ConfirmInputCorrect($ModifiedParams) {
     while(1) {
         Write-Host("Data Collected:`n================`n ")
@@ -224,7 +225,10 @@ Function ConfirmInputCorrect($ModifiedParams) {
 Function Main { 
     $Proceed = 'N'
     while($Proceed -ne 'y' -or $Proceed -ne 'Y') { #loop forever until user says input is correct
-        [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank lines ensures there are at least 4 lines
+        [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank & irrelevant lines. It also ensures there are at least 4 lines
+        if ($UserInfoData.Count -lt 3) {
+            continue #get user input again
+        }
         $UserInfoData = ValidateInput($UserInfoData) #deletes lines that are not relevant and ensures there are 4 lines that contain the variables we want
         [System.Collections.ArrayList]$ModifiedParams = UserInputToParameters($UserInfoData) #Parses the data and stores the 4 variables to pass to the new user script
         if ($null -eq $ModifiedParams) { #this becomes null if there are not 4 lines that contain the variables we want.
