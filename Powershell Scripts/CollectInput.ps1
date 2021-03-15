@@ -118,20 +118,23 @@ Function ValidateInput ($UserInfoArgs) {
 #4: [data]          //Job Title
 Function UserInputToParameters ($UserInfoArgs) { 
     $ModifiedParams = [System.Collections.ArrayList]@()
+    $IsAdded = 0
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) {
         if ($i -eq 0) {
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve all spaces 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,3) #take only next 3 chars
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,3) #take only next 3 chars #PROBLEM
             if ($UserInfoArgs[$i].Length -ne 3 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
                 Write-Host ("ERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n")
                 $UserInfoArgs[$i] = Read-Host
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
                 $i-- #decrement i so we will validate this again.
+                $IsAdded = 1 #set the flag to know we have already added this value -- don't add again
                 continue
             }
-            else{
+            elseif ($IsAdded -eq 0) { #only add if the flag is false
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+                $IsAdded = 0 #reset the flag
             }
         }
         if ($i -eq 1) {
@@ -142,10 +145,12 @@ Function UserInputToParameters ($UserInfoArgs) {
                 $UserInfoArgs[$i] = Read-Host 
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
                 $i-- #decrement i so we will validate this again.
+                $IsAdded = 1 #set the flag to know we have already added this value -- don't add again
                 continue
             }
-            else {
+            elseif ($IsAdded -eq 0) { #only add if the flag is false
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+                $IsAdded = 0 #reset the flag
             }
             
         }
@@ -165,13 +170,15 @@ Function UserInputToParameters ($UserInfoArgs) {
                     $UserInfoArgs[$i] = Read-Host 
                     $ModifiedParams[2] = $UserInfoArgs[$i] #prevent adding integers to the arraylist
                     $i-- #decrement i so we will validate this again.
+                    $IsAdded = 1 #set the flag to know we have already added this value -- don't add again
                     continue
                 }
-                else {
+                elseif ($IsAdded -eq 0) { #only add if the flag is false
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("PreferredNameforEmail:","")
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("."," ") #Replace . with space to fit name format    
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('@'))
-                    $ModifiedParams[2] = $UserInfoArgs[$i] # set name to be the email name for easier AD modifications after the script is ran                
+                    $ModifiedParams[2] = $UserInfoArgs[$i] # set name to be the email name for easier AD modifications after the script is ran  
+                    $IsAdded = 0 #reset the flag            
                 }
             }
         }
@@ -182,7 +189,7 @@ Function UserInputToParameters ($UserInfoArgs) {
         }
     }
     if ($ModifiedParams.Count -ne 4) {
-        Write-Host "Missing at least one of the required lines"
+        Write-Host "Invalid number of lines"
         Start-Sleep 1.5
         Clear-Host
         return $null
