@@ -121,11 +121,14 @@ Function UserInputToParameters ($UserInfoArgs) {
     $IsAdded = 0
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) {
         if ($i -eq 0) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve all spaces 
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,3) #take only next 3 chars #PROBLEM
+            if ($IsAdded -eq 0) { #there won't be a / if we re-entered it
+                $IndexOfSlash = $UserInfoArgs[$i].IndexOf("/")
+            }
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,$IndexOfSlash) #take only next 3 chars #PROBLEM
             if ($UserInfoArgs[$i].Length -ne 3 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
-                Write-Host ("ERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n")
+                Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n")
                 $UserInfoArgs[$i] = Read-Host
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
                 $i-- #decrement i so we will validate this again.
@@ -138,10 +141,10 @@ Function UserInputToParameters ($UserInfoArgs) {
             }
         }
         if ($i -eq 1) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve all spaces
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("EmployeeNumber:","")
             if ($UserInfoArgs[$i].Length -ne 4 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
-                Write-Host ("ERROR, Employee ID is not 4 digits or contains non numeric characters. Enter the correct Employee ID:`n")
+                Write-Host ("`nERROR, Employee ID is not 4 digits or contains non numeric characters. Enter the correct Employee ID:`n")
                 $UserInfoArgs[$i] = Read-Host 
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
                 $i-- #decrement i so we will validate this again.
@@ -159,14 +162,14 @@ Function UserInputToParameters ($UserInfoArgs) {
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
         }
         if ($i -eq 3) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Reomve spaces if they exist
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove spaces if they exist
             if ($UserInfoArgs[$i] -eq "PreferredNameforEmail:") {
                 continue
             }
             else {
                 $LengthAfterDotRemoval = $UserInfoArgs[$i].replace(".","").Length
                 if ($UserInfoArgs[$i] -match "@wilco.coop" -eq 0 -or ($UserInfoArgs[$i].Length - ($LengthAfterDotRemoval) -ne 2)) { #ensures there are 2 periods, and there is an @wilco.coop
-                    Write-Host ("ERROR, Invalid Format to Preferred Name for Email.`nFormat is: FirstName.LastName@wilco.coop`nEnter preferred name for email:`n")
+                    Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.`nFormat is: FirstName.LastName@wilco.coop`nEnter preferred name for email:`n")
                     $UserInfoArgs[$i] = Read-Host 
                     $ModifiedParams[2] = $UserInfoArgs[$i] #prevent adding integers to the arraylist
                     $i-- #decrement i so we will validate this again.
