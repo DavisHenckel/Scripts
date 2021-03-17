@@ -118,26 +118,27 @@ Function ValidateInput ($UserInfoArgs) {
 #4: [data]          //Job Title
 Function UserInputToParameters ($UserInfoArgs) { 
     $ModifiedParams = [System.Collections.ArrayList]@()
-    $IsAdded = 0
+    $IsAddedLoc = 0 #flag to keep track of whether the location has already been added
+    $IsAddedEmp = 0 #flag to keep track of whether the Employee num has already been added
+    $IsAddedPrefNameEmail = 0 #flag to keep track of whether the pref email name has already been added
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) {
         if ($i -eq 0) {
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
-            if ($IsAdded -eq 0) { #there won't be a / if we re-entered it
+            if ($IsAddedLoc -eq 0) { #there won't be a / if we re-entered it
                 $IndexOfSlash = $UserInfoArgs[$i].IndexOf("/")
+                $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,$IndexOfSlash)
             }
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,$IndexOfSlash) #take only next 3 chars #PROBLEM
             if ($UserInfoArgs[$i].Length -ne 3 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
                 Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n")
                 $UserInfoArgs[$i] = Read-Host
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
                 $i-- #decrement i so we will validate this again.
-                $IsAdded = 1 #set the flag to know we have already added this value -- don't add again
+                $IsAddedLoc = 1 #set the flag to know we have already added this value -- don't add again
                 continue
             }
-            elseif ($IsAdded -eq 0) { #only add if the flag is false
+            elseif ($IsAddedLoc -eq 0) { #only add if the flag is false
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
-                $IsAdded = 0 #reset the flag
             }
         }
         if ($i -eq 1) {
@@ -148,40 +149,44 @@ Function UserInputToParameters ($UserInfoArgs) {
                 $UserInfoArgs[$i] = Read-Host 
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
                 $i-- #decrement i so we will validate this again.
-                $IsAdded = 1 #set the flag to know we have already added this value -- don't add again
+                $IsAddedEmp = 1 #set the flag to know we have already added this value -- don't add again
                 continue
             }
-            elseif ($IsAdded -eq 0) { #only add if the flag is false
+            elseif ($IsAddedEmp -eq 0) { #only add if the flag is false
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
-                $IsAdded = 0 #reset the flag
             }
             
         }
         if ($i -eq 2) {
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("User Name: ","")
+            if ($UserInfoArgs[$i] -match "-" -eq 1) { #if there is multiple last name. Only use the first.
+                $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('-'))
+            }
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
         }
         if ($i -eq 3) {
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove spaces if they exist
-            if ($UserInfoArgs[$i] -eq "PreferredNameforEmail:") {
+            if ($UserInfoArgs[$i] -eq "PreferredNameforEmail:" -or $UserInfoArgs[$i] -eq "") {
                 continue
             }
             else {
                 $LengthAfterDotRemoval = $UserInfoArgs[$i].replace(".","").Length
                 if ($UserInfoArgs[$i] -match "@wilco.coop" -eq 0 -or ($UserInfoArgs[$i].Length - ($LengthAfterDotRemoval) -ne 2)) { #ensures there are 2 periods, and there is an @wilco.coop
-                    Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.`nFormat is: FirstName.LastName@wilco.coop`nEnter preferred name for email:`n")
-                    $UserInfoArgs[$i] = Read-Host 
-                    $ModifiedParams[2] = $UserInfoArgs[$i] #prevent adding integers to the arraylist
-                    $i-- #decrement i so we will validate this again.
-                    $IsAdded = 1 #set the flag to know we have already added this value -- don't add again
+                    Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.`nFormat is: FirstName.LastName@wilco.coop`nEnter preferred name for email`nPress enter if there isn't a preferred email:")
+                    $UserInfoArgs[$i] = Read-Host
+                    $i-- #decrement i
                     continue
+                    if ($UserInfoArgs[$i] -ne "") {
+                        $ModifiedParams[2] = $UserInfoArgs[$i] #prevent adding integers to the arraylist
+                        $i-- #decrement i so we will validate this again.
+                        $IsAddedPrefNameEmail = 1 #set the flag to know we have already added this value -- don't add again
+                    }
                 }
-                elseif ($IsAdded -eq 0) { #only add if the flag is false
+                elseif ($IsAddedPrefNameEmail -eq 0) { #only add if the flag is false
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("PreferredNameforEmail:","")
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("."," ") #Replace . with space to fit name format    
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('@'))
-                    $ModifiedParams[2] = $UserInfoArgs[$i] # set name to be the email name for easier AD modifications after the script is ran  
-                    $IsAdded = 0 #reset the flag            
+                    $ModifiedParams[2] = $UserInfoArgs[$i] # set name to be the email name for easier AD modifications after the script is ran           
                 }
             }
         }

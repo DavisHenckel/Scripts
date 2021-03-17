@@ -1,0 +1,157 @@
+============================================================ Good Input
+
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:  
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe  
+
+============================================================ Good Input with preferred name for email changing username
+
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:  Jim.Appleseed@wilco.coop
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
+
+============================================================ Invalid Location Number
+
+Dept / Location: 5553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:  Jim.Appleseed@wilco.coop
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
+
+============================================================ Invalid Location Number
+
+Dept / Location: 5s53 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:  Jim.Appleseed@wilco.coop
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
+
+============================================================ Invalid Employee Number
+
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:99299
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe
+
+============================================================ Invalid Employee Number
+
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:99g99
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email: 
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe
+
+============================================================ Deal with extra lines
+NEW HIRE
+Dept / Location: 553 / Gig Harbor
+alksdkajsddas
+Employee Number:9999
+akdajsdlkajsdlkasdlkasjdalsdjasld
+asdjkhasdkjhakdjashdak
+asddasasssss
+User Name: Johnny Appleseed  
+asdjkhasdkjhakdjashdak
+Preferred Name for Email: 
+asjdakshdaks
+Job Title: Retail Warehouser
+Start Date:  03/17/2021
+Requesting Manager: Jane Doe
+asdadhsadjds
+
+============================================================ 3 bad inputs
+
+Dept / Location: 5s53 / Gig Harbor
+
+Employee Number:99s99
+
+User Name: Johnny Appleseed
+
+Preferred Name for Email:  Jim Appleseed
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
+
+============================================================ Missing lines
+
+Dept / Location:  553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed-Henckel  
+
+Preferred Name for Email:
+
+============================================================ 2 Last names
+
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed-Henckel
+
+Preferred Name for Email:  
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
+
+
+ 
