@@ -139,7 +139,7 @@ Preferred Name for Email:
 
 ============================================================ 2 Last names
 
-Dept / Location: 553 / Gig Harbor
+Dept / Location: 483 / Gig Harbor
 
 Employee Number:9999
 
@@ -153,5 +153,35 @@ Start Date:  03/17/2021
 
 Requesting Manager: Jane Doe 
 
+============================================================ Double spaces in username
 
+Dept / Location: 483 / Newberg
+
+Employee Number:9999
+
+User Name: Johnny  Appleseed
+
+Preferred Name for Email:
+
+Job Title: Retail Salesperson – Lawn & Garden
+
+Start Date:  03/22/2021
+
+Requesting Manager: Jane
+
+============================================================ Extra spaces in input
+
+Dept    /  Location:   483 /   Newberg
+
+Employee   Number:9999
+
+User   Name:   Johnny  Appleseed
+
+Preferred   Name for Email:
+
+Job   Title:  Retail Salesperson – Lawn & Garden
+
+Start Date:  03/22/2021
+
+Requesting Manager: Jane
  
