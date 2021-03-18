@@ -138,7 +138,12 @@ Function UserInputToParameters ($UserInfoArgs) {
             if ($UserInfoArgs[$i].Length -ne 3 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
                 Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n") -ForegroundColor Red
                 $UserInfoArgs[$i] = Read-Host
-                $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+                if ($IsAddedLoc -eq 1) {
+                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value
+                }
+                else {
+                    $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
+                }
                 $i-- #decrement i so we will validate this again.
                 $IsAddedLoc = 1 #set the flag to know we have already added this value -- don't add again
                 continue
@@ -157,7 +162,12 @@ Function UserInputToParameters ($UserInfoArgs) {
             if ($UserInfoArgs[$i].Length -ne 4 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
                 Write-Host ("`nERROR, Employee ID is not 4 digits or contains non numeric characters. Enter the correct Employee ID:`n") -ForegroundColor Red
                 $UserInfoArgs[$i] = Read-Host 
-                $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+                if ($IsAddedEmp -eq 1) {
+                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value
+                }
+                else {
+                    $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
+                }
                 $i-- #decrement i so we will validate this again.
                 $IsAddedEmp = 1 #set the flag to know we have already added this value -- don't add again
                 continue
@@ -195,11 +205,6 @@ Function UserInputToParameters ($UserInfoArgs) {
                     $UserInfoArgs[$i] = Read-Host
                     $i-- #decrement i
                     continue
-                    if ($UserInfoArgs[$i] -ne "") {
-                        $ModifiedParams[2] = $UserInfoArgs[$i] #prevent adding integers to the arraylist
-                        $i-- #decrement i so we will validate this again.
-                        $IsAddedPrefNameEmail = 1 #set the flag to know we have already added this value -- don't add again
-                    }
                 }
                 elseif ($IsAddedPrefNameEmail -eq 0) { #only add if the flag is false
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("PreferredNameforEmail:","")
