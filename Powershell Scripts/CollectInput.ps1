@@ -127,7 +127,8 @@ Function UserInputToParameters ($UserInfoArgs) {
     $IsAddedEmp = 0 #flag to keep track of whether the Employee num has already been added
     $IsAddedPrefNameEmail = 0 #flag to keep track of whether the pref email name has already been added
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) {
-        if ($i -eq 0) {
+        #================= Location Code Validation -- Should Make this a function at some point ================= 
+        if ($i -eq 0) { 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
             if ($IsAddedLoc -eq 0) { #there won't be a / if we re-entered it
@@ -146,7 +147,11 @@ Function UserInputToParameters ($UserInfoArgs) {
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
             }
         }
-        if ($i -eq 1) {
+        #================= End Of Location Code Validation =================
+
+
+        #================= Employee Number Validation -- Should Make this a function at some point ================= 
+        if ($i -eq 1) { 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("EmployeeNumber:","")
             if ($UserInfoArgs[$i].Length -ne 4 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
@@ -162,14 +167,22 @@ Function UserInputToParameters ($UserInfoArgs) {
             }
             
         }
-        if ($i -eq 2) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("User Name: ","")
+        #================= End Of Employee Number Validation =================
+
+
+        #================= User Name Validation -- Should Make this a function at some point =================
+        if ($i -eq 2) { 
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("User Name: ","") 
             if ($UserInfoArgs[$i] -match "-" -eq 1) { #if there is multiple last name. Only use the first.
                 $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('-'))
             }
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
         }
-        if ($i -eq 3) {
+        #================= End Of User Name Validation =================
+
+
+        #================= Preferred Name for Email Validation -- Should Make this a function at some point =================
+        if ($i -eq 3) { 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove spaces if they exist
             if ($UserInfoArgs[$i] -eq "PreferredNameforEmail:" -or $UserInfoArgs[$i] -eq "") {
                 continue
@@ -196,6 +209,9 @@ Function UserInputToParameters ($UserInfoArgs) {
                 }
             }
         }
+        #================= End Of Preferred Name for Email Validation =================
+
+        
         if ($i -eq 4) {
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Job Title: ","")
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
