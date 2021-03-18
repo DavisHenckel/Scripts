@@ -139,7 +139,7 @@ Function UserInputToParameters ($UserInfoArgs) {
                 Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n") -ForegroundColor Red
                 $UserInfoArgs[$i] = Read-Host
                 if ($IsAddedLoc -eq 1) {
-                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value
+                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value if it has already been added
                 }
                 else {
                     $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
@@ -163,7 +163,7 @@ Function UserInputToParameters ($UserInfoArgs) {
                 Write-Host ("`nERROR, Employee ID is not 4 digits or contains non numeric characters. Enter the correct Employee ID:`n") -ForegroundColor Red
                 $UserInfoArgs[$i] = Read-Host 
                 if ($IsAddedEmp -eq 1) {
-                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value
+                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value if it has already been added
                 }
                 else {
                     $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
