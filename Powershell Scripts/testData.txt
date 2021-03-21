@@ -1,3 +1,6 @@
+Pass this data to InterpretNewHireEmail.ps1 to see how it behaves
+
+
 ============================================================ Good Input
 
 Dept / Location: 553 / Gig Harbor
@@ -30,6 +33,22 @@ Start Date:  03/17/2021
 
 Requesting Manager: Jane Doe 
 
+============================================================ Extra spaces in input
+
+Dept    /  Location:   483 /   Newberg
+
+Employee   Number:9999
+
+User   Name:   Johnny   Appleseed
+
+Preferred   Name for Email:
+
+Job   Title:  Retail  Salesperson    – Lawn &  Garden
+
+Start Date:  03/22/2021
+
+Requesting Manager: Jane
+
 ============================================================ Invalid Location Number
 
 Dept / Location: 5553 / Gig Harbor
@@ -46,7 +65,7 @@ Start Date:  03/17/2021
 
 Requesting Manager: Jane Doe 
 
-============================================================ Invalid Location Number
+============================================================ Invalid Location Number + Hazelnut email
 
 Dept / Location: 5s53 / Gig Harbor
 
@@ -54,7 +73,7 @@ Employee Number:9999
 
 User Name: Johnny Appleseed  
 
-Preferred Name for Email:  Jim.Appleseed@wilco.coop
+Preferred Name for Email:  Jim.Appleseed@hazelnut.com
 
 Job Title: Retail Warehouser
 
@@ -139,7 +158,7 @@ Preferred Name for Email:
 
 ============================================================ 2 Last names
 
-Dept / Location: 553 / Gig Harbor
+Dept / Location: 483 / Gig Harbor
 
 Employee Number:9999
 

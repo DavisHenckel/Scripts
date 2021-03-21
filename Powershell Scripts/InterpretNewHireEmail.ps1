@@ -1,10 +1,41 @@
+#============================================================================================
+#Improvement Ideas:
+
+#   Allow Employee Number to be 1,2,3,4, or 5 digits
+#   Allow user to change specific input, while still being quick and efficient.
+#   Refactor UserInputToParameters into several functions. Probably one function for each line
+#   Allow user to opt to manually enter the data
+#   Account for if template has 2 last names without a '-' char
+#   Validate Job Titles...somehow
+#   Ensure Employee Number and Location Code are easily transferrable to ints instead of strings
+
+#============================================================================================
+
+
+#Taken from New_User_Script_2020 -- This makes the screen black if we are in an elevated shell
+#============================================================================================
+$myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+$myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+
+# Get the security principal for the Administrator role
+$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+
+# Check to see if we are currently running "as Administrator"
+if ($myWindowsPrincipal.IsInRole($adminRole)) {
+   # We are running "as Administrator" - so change the title and background color to indicate this
+   $Host.UI.RawUI.WindowTitle = $myInvocation.MyCommand.Definition + "(Elevated)"
+   $Host.UI.RawUI.BackgroundColor = "Black"
+   clear-host
+}
+#============================================================================================
+
 
 #Collects user input based off template sent from HR 
 #This will not collect lines with less than 2 characters to avoid collecting empty lines.
 #This will also ensure there are at least 5 lines since we need at least that many parameters.
 Function GetUserInput {
     $InputParams = [System.Collections.ArrayList]@()
-    Write-Host("Enter the user's information (Enter 2 blank lines to stop collecting input):")
+    Write-Host("Paste email contents from HR (Enter 2 blank lines to stop collecting input):`n") -ForegroundColor Cyan
     $UserInput = $null
     $Flag = 0 #Keeps track of blank lines 1 means there was a blank line last iteration, 2 consecutive blank lines will end the loop.
     while(1) {
@@ -25,7 +56,7 @@ Function GetUserInput {
 
     }
     if($InputParams.Count -lt 4) {
-        Write-Host "Not enough input given. Restarting program...."
+        Write-Host "Not enough input given. Restarting program...." -ForegroundColor Red
         Start-Sleep -s 1.5
         Clear-Host
         GetUserInput #collect input again.
@@ -35,7 +66,8 @@ Function GetUserInput {
 
 #Ensures input given is in a valid format. After this function is run, there should only be 5 Entries in the array list
 #Input to this function must be given in the correct order. The program doesn't yet parse the data out of order. 
-#Input must be given in the format shown in lines 40-44. 
+#Input must be given in the order shown in lines 72-76
+#This will also remove any duplicate spaces if there were typos in the template
 #Example entries in the arraylist will look like this
 #0: Dept / Location: [data]
 #1: Employee Number:[data]
@@ -45,10 +77,13 @@ Function GetUserInput {
 Function ValidateInput ($UserInfoArgs) { 
 
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) { #If a line is not valid or doesn't contain what we are looking for. Remove it from the list entirely and decrement counter
+        while ($UserInfoArgs[$i] -match "  ") { #while there are duplicate spaces in the current line   
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("  "," ") #remove duplicate spaces if there are typos
+        }
         if ($i -eq 0 -and ($UserInfoArgs[$i] -Match "Dept" -eq 0 -or $UserInfoArgs[$i] -Match "Location" -eq 0)) { #validate first line
             $UserInfoArgs.Remove($UserInfoArgs[$i])
             if ($i -eq $UserInfoArgs.Count) {
-                Write-Host "Never found Location Number... Check format and try again"
+                Write-Host "Never found Location Number... Check format and try again" -ForegroundColor Red
                 Start-Sleep 1.5
                 Clear-Host
                 break
@@ -59,7 +94,7 @@ Function ValidateInput ($UserInfoArgs) {
         if ($i -eq 1 -and ($UserInfoArgs[$i] -Match "Employee Number" -eq 0)) { #validate second line
             $UserInfoArgs.Remove($UserInfoArgs[$i])
             if ($i -eq $UserInfoArgs.Count) {
-                Write-Host "Never found Employee Number... Check format and try again"
+                Write-Host "Never found Employee Number... Check format and try again" -ForegroundColor Red
                 Start-Sleep 1.5
                 Clear-Host
                 break
@@ -70,7 +105,7 @@ Function ValidateInput ($UserInfoArgs) {
         if ($i -eq 2 -and ($UserInfoArgs[$i] -Match "User Name" -eq 0)) { #validate third line
             $UserInfoArgs.Remove($UserInfoArgs[$i])
             if ($i -eq $UserInfoArgs.Count) {
-                Write-Host "Never found User Name... Check format and try again"
+                Write-Host "Never found User Name... Check format and try again" -ForegroundColor Red
                 Start-Sleep 1.5
                 Clear-Host
                 break
@@ -81,7 +116,7 @@ Function ValidateInput ($UserInfoArgs) {
         if ($i -eq 3 -and ($UserInfoArgs[$i] -Match "Preferred Name for Email" -eq 0)) { #validate fourth line
             $UserInfoArgs.Remove($UserInfoArgs[$i])
             if ($i -eq $UserInfoArgs.Count) {
-                Write-Host "Never found Prefered name for Email... Check format and try again"
+                Write-Host "Never found Prefered name for Email... Check format and try again" -ForegroundColor Red
                 Start-Sleep 1.5
                 Clear-Host
                 break
@@ -92,7 +127,7 @@ Function ValidateInput ($UserInfoArgs) {
         if ($i -eq 4 -and ($UserInfoArgs[$i] -Match "Job Title" -eq 0)) { #validate fifth line
             $UserInfoArgs.Remove($UserInfoArgs[$i])
             if ($i -eq $UserInfoArgs.Count) {
-                Write-Host "Never found Job Title... Check format and try again"
+                Write-Host "Never found Job Title... Check format and try again" -ForegroundColor Red
                 Start-Sleep 1.5
                 Clear-Host
                 break
@@ -116,13 +151,15 @@ Function ValidateInput ($UserInfoArgs) {
 #2: [data]          //User Name
 #3: [data]          //Preferred Name for Email (may be empty)
 #4: [data]          //Job Title
+#This should be refactored at some point.
 Function UserInputToParameters ($UserInfoArgs) { 
     $ModifiedParams = [System.Collections.ArrayList]@()
     $IsAddedLoc = 0 #flag to keep track of whether the location has already been added
     $IsAddedEmp = 0 #flag to keep track of whether the Employee num has already been added
     $IsAddedPrefNameEmail = 0 #flag to keep track of whether the pref email name has already been added
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) {
-        if ($i -eq 0) {
+        #================= Location Code Validation -- Should Make this a function at some point ================= 
+        if ($i -eq 0) { 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
             if ($IsAddedLoc -eq 0) { #there won't be a / if we re-entered it
@@ -130,9 +167,14 @@ Function UserInputToParameters ($UserInfoArgs) {
                 $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,$IndexOfSlash)
             }
             if ($UserInfoArgs[$i].Length -ne 3 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
-                Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters. Enter the correct Location Code:`n")
-                $UserInfoArgs[$i] = Read-Host
-                $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+                Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters.") -ForegroundColor Red
+                $UserInfoArgs[$i] = Read-Host -Prompt ("Enter the correct Location Code")
+                if ($IsAddedLoc -eq 1) {
+                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value if it has already been added
+                }
+                else {
+                    $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
+                }
                 $i-- #decrement i so we will validate this again.
                 $IsAddedLoc = 1 #set the flag to know we have already added this value -- don't add again
                 continue
@@ -141,13 +183,22 @@ Function UserInputToParameters ($UserInfoArgs) {
                 $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
             }
         }
-        if ($i -eq 1) {
+        #================= End Of Location Code Validation =================
+
+
+        #================= Employee Number Validation -- Should Make this a function at some point ================= 
+        if ($i -eq 1) { 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("EmployeeNumber:","")
             if ($UserInfoArgs[$i].Length -ne 4 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
-                Write-Host ("`nERROR, Employee ID is not 4 digits or contains non numeric characters. Enter the correct Employee ID:`n")
-                $UserInfoArgs[$i] = Read-Host 
-                $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+                Write-Host ("`nERROR, Employee ID is not 4 digits or contains non numeric characters.`n") -ForegroundColor Red
+                $UserInfoArgs[$i] = Read-Host -Prompt ("Enter the correct Employee ID")
+                if ($IsAddedEmp -eq 1) {
+                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value if it has already been added
+                }
+                else {
+                    $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
+                }
                 $i-- #decrement i so we will validate this again.
                 $IsAddedEmp = 1 #set the flag to know we have already added this value -- don't add again
                 continue
@@ -157,30 +208,34 @@ Function UserInputToParameters ($UserInfoArgs) {
             }
             
         }
-        if ($i -eq 2) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("User Name: ","")
+        #================= End Of Employee Number Validation =================
+
+
+        #================= User Name Validation -- Should Make this a function at some point =================
+        if ($i -eq 2) { 
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("User Name: ","") 
             if ($UserInfoArgs[$i] -match "-" -eq 1) { #if there is multiple last name. Only use the first.
                 $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('-'))
             }
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
         }
-        if ($i -eq 3) {
+        #================= End Of User Name Validation =================
+
+
+        #================= Preferred Name for Email Validation -- Should Make this a function at some point =================
+        if ($i -eq 3) { 
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove spaces if they exist
             if ($UserInfoArgs[$i] -eq "PreferredNameforEmail:" -or $UserInfoArgs[$i] -eq "") {
                 continue
             }
             else {
                 $LengthAfterDotRemoval = $UserInfoArgs[$i].replace(".","").Length
-                if ($UserInfoArgs[$i] -match "@wilco.coop" -eq 0 -or ($UserInfoArgs[$i].Length - ($LengthAfterDotRemoval) -ne 2)) { #ensures there are 2 periods, and there is an @wilco.coop
-                    Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.`nFormat is: FirstName.LastName@wilco.coop`nEnter preferred name for email`nPress enter if there isn't a preferred email:")
-                    $UserInfoArgs[$i] = Read-Host
+                if (($UserInfoArgs[$i] -match "@wilco.coop" -eq 0 -and ($UserInfoArgs[$i] -match "@hazelnut.com" -eq 0)) -or ($UserInfoArgs[$i].Length - ($LengthAfterDotRemoval) -ne 2)) { #ensures there are 2 periods, and there is an @wilco.coop
+                    Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.") -ForegroundColor Red
+                    Write-Host ("`nFormat is: FirstName.LastName@wilco.coop`nPress enter if there isn't a preferred email:") -ForegroundColor White
+                    $UserInfoArgs[$i] = Read-Host -Prompt ("Enter preferred name for email")
                     $i-- #decrement i
                     continue
-                    if ($UserInfoArgs[$i] -ne "") {
-                        $ModifiedParams[2] = $UserInfoArgs[$i] #prevent adding integers to the arraylist
-                        $i-- #decrement i so we will validate this again.
-                        $IsAddedPrefNameEmail = 1 #set the flag to know we have already added this value -- don't add again
-                    }
                 }
                 elseif ($IsAddedPrefNameEmail -eq 0) { #only add if the flag is false
                     $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("PreferredNameforEmail:","")
@@ -190,6 +245,9 @@ Function UserInputToParameters ($UserInfoArgs) {
                 }
             }
         }
+        #================= End Of Preferred Name for Email Validation =================
+
+        
         if ($i -eq 4) {
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Job Title: ","")
             $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
@@ -197,7 +255,7 @@ Function UserInputToParameters ($UserInfoArgs) {
         }
     }
     if ($ModifiedParams.Count -ne 4) {
-        Write-Host "Invalid number of lines"
+        Write-Host "Invalid number of lines" -ForegroundColor Red
         Start-Sleep 1.5
         Clear-Host
         return $null
@@ -209,21 +267,21 @@ Function UserInputToParameters ($UserInfoArgs) {
 #Returns Boolean that indicates if the input looks correct to the user.
 Function ConfirmInputCorrect($ModifiedParams) {
     while(1) {
-        Write-Host("Data Collected:`n================`n ")
+        Write-Host("Data Parsed:`n ") -ForegroundColor Cyan
         for ($i = 0; $i -lt 4; $i++) {
             switch ($i) {
                 0 { $ToPrint = $ModifiedParams[$i]
-                    Write-Host("Location Code:$ToPrint`n")}
+                    Write-Host("Location Code: $ToPrint`n")}
                 1 { $ToPrint = $ModifiedParams[$i]
-                    Write-Host("Employee ID:$ToPrint`n")}
+                    Write-Host("Employee ID: $ToPrint`n")}
                 2 { $ToPrint = $ModifiedParams[$i]
-                    Write-Host("User Name:$ToPrint`n")}
+                    Write-Host("User Name: $ToPrint`n")}
                 3 { $ToPrint = $ModifiedParams[$i]
-                    Write-Host("Job Title:$ToPrint`n")}
-                default { Write-Host("This won't ever happen")}
+                    Write-Host("Job Title: $ToPrint`n")}
+                default { Write-Host("This won't ever happen") -ForegroundColor Red}
             }
         }
-        $UserInput = Read-Host -Prompt ("Is this data correct? (y/n)")
+        $UserInput = Read-Host -Prompt ("Is the employee's information correct? (y/n)")
         if ($UserInput -eq 'y' -or $UserInput -eq 'Y') {
             break
         }
@@ -231,13 +289,17 @@ Function ConfirmInputCorrect($ModifiedParams) {
             break
         }
         Clear-Host
-        Write-Host("Invalid Input. Enter (y/n)`n")
+        Write-Host("Invalid Input. Enter (y/n)`n") -ForegroundColor Red
     }
     return $UserInput
 } 
 
-#Main function -- Don't need this to be a function. Just for my organization
+#Main function -- Don't need this to be a function. Just my preference
+#This function controls the program flow and calls the new user script after data has been validated.
 Function Main { 
+    Write-Host ("============================================================================") -ForegroundColor Yellow
+    Write-Host ("`n================================= NEW HIRE =================================`n") -ForegroundColor Yellow
+    Write-Host ("============================================================================`n") -ForegroundColor Yellow
     $Proceed = 'N'
     while($Proceed -ne 'y' -or $Proceed -ne 'Y') { #loop forever until user says input is correct
         [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank & irrelevant lines. It also ensures there are at least 4 lines
@@ -258,7 +320,8 @@ Function Main {
             $ArgumentList = "-LocNum $Arg1 -EmpNum $Arg2 -Name `"$Arg3`" -JobTitle `"$Arg4`""
             $ScriptPath= $PSScriptRoot+"\test.ps1"
             Invoke-Expression "& `"$ScriptPath`" $ArgumentList" #jump to new script, passing the validated data
-            return
+            cmd /c pause
+            exit
         }
         elseif ($Proceed -eq 'N' -or $Proceed -eq 'n') { 
             Clear-Host
@@ -273,5 +336,3 @@ Function Main {
 }
 
 Main #call main function
-cmd /c pause
-exit
