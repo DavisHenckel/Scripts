@@ -321,6 +321,7 @@ Function ModifyData($ModifiedParams) {
             Write-Host "[2]: Employee Number: $Arg2"
             Write-Host "[3]: User Name: $Arg3"
             Write-Host "[4]: Job Title: $Arg4"
+            Write-Host "[5]: Re-enter the entire email from HR"
             Write-Host "What is not correct? Enter the number" -ForegroundColor Cyan
             try { [int32]$IncorrectIndex = Read-Host } #put in a try catch so we can interpret the input as an int later.
             catch { #if the user didn't enter an integer.
@@ -329,7 +330,7 @@ Function ModifyData($ModifiedParams) {
                 Clear-Host
                 continue #prompt again
             }
-            if ($IncorrectIndex -lt 1 -or $IncorrectIndex -gt 4) { #if the user entered a number that isn't 1-4
+            if ($IncorrectIndex -lt 1 -or $IncorrectIndex -gt 5) { #if the user entered a number that isn't 1-4
                 Write-Host "Invalid Input enter a number 1-4" -ForegroundColor Red
                 Start-Sleep 1
                 Clear-Host
@@ -342,10 +343,11 @@ Function ModifyData($ModifiedParams) {
                 2 { $ModifiedParams[1] = Read-Host -Prompt ("Enter the correct Employee Number") }
                 3 { $ModifiedParams[2] = Read-Host -Prompt ("Enter the correct User Name") }
                 4 { $ModifiedParams[3] = Read-Host -Prompt ("Enter the correct Job Title") }
+                5 { return 1 } #1 will show that user wanted to re enter the entire template.
             }
             #it is safe to run IsDataValid because we already ran it once before, the only thing that could possibly be changed is the new data from this func.
             if (IsDataValid($ModifiedParams) -eq 1) { #if the new data the user entered is valid, break out of the while loop.
-                break
+                return 0 #0 means 
             }
             else { #if for some reason the data is still not valid after the user enters it again...
                 switch ($IncorrectIndex) { #display that the new input is not valid.
@@ -382,6 +384,7 @@ Function Main {
     Write-Host ("`n================================= NEW HIRE =================================`n") -ForegroundColor Yellow
     Write-Host ("============================================================================`n") -ForegroundColor Yellow
     $Proceed = 'N'
+    $Result = 0 #This is used in the 2nd while loop, where we ask the user if they want to modify the data.
     while($Proceed -ne 'y' -or $Proceed -ne 'Y') { #loop forever until user says input is correct
         [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank & irrelevant lines. It also ensures there are at least 4 lines
         if ($UserInfoData.Count -lt 3) {
@@ -400,7 +403,10 @@ Function Main {
         }
         elseif ($Proceed -eq 'N' -or $Proceed -eq 'n') { 
             While (1) { #loop until user says it's correct
-                ModifyData($ModifiedParams) #allows the user to modify the data.
+                $Result = ModifyData($ModifiedParams) #allows the user to modify the data. if the function returns 1, the user opted to re-enter the template.
+                if ($Result -eq 1) {
+                    break #leave the loop. The user wants to re-enter the entire template.
+                }
                 $Proceed = ConfirmInputCorrect($ModifiedParams) #now that the data has been modified, confirm once again that the input is correct
                 if ($Proceed -eq 'Y' -or $Proceed -eq 'y') {
                     break
@@ -408,6 +414,9 @@ Function Main {
                 else { #if the input is not correct, jump into the first line of while loop and run ModifyData again.
                     continue
                 }
+            }
+            if ($Result -eq 1) { #if the user opted to re-enter the entire template
+                continue
             }
             CallNewPSScript($ModifiedParams) #execute new script
             cmd /c pause
