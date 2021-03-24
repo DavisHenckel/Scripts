@@ -2,33 +2,29 @@
 #Improvement Ideas:
 
 #   Allow Employee Number to be 1,2,3,4, or 5 digits
-#   Allow user to change specific input, while still being quick and efficient.
 #   Refactor UserInputToParameters into several functions. Probably one function for each line
-#   Allow user to opt to manually enter the data
-#   Account for if template has 2 last names without a '-' char
-#   Validate Job Titles...somehow
-#   Ensure Employee Number and Location Code are easily transferrable to ints instead of strings
+#   Validate Job Titles -- maybe with excel import
 
 #============================================================================================
-
 
 #Taken from New_User_Script_2020 -- This makes the screen black if we are in an elevated shell
-#============================================================================================
-$myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-$myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+Function SetupEnvironment {
+    
 
-# Get the security principal for the Administrator role
-$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
 
-# Check to see if we are currently running "as Administrator"
-if ($myWindowsPrincipal.IsInRole($adminRole)) {
-   # We are running "as Administrator" - so change the title and background color to indicate this
-   $Host.UI.RawUI.WindowTitle = $myInvocation.MyCommand.Definition + "(Elevated)"
-   $Host.UI.RawUI.BackgroundColor = "Black"
-   clear-host
+    # Get the security principal for the Administrator role
+    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+
+    # Check to see if we are currently running "as Administrator"
+    if ($myWindowsPrincipal.IsInRole($adminRole)) {
+    # We are running "as Administrator" - so change the title and background color to indicate this
+    $Host.UI.RawUI.WindowTitle = $myInvocation.MyCommand.Definition + "(Elevated)"
+    $Host.UI.RawUI.BackgroundColor = "Black"
+    clear-host
+    }
 }
-#============================================================================================
-
 
 #Collects user input based off template sent from HR 
 #This will not collect lines with less than 2 characters to avoid collecting empty lines.
@@ -263,6 +259,22 @@ Function UserInputToParameters ($UserInfoArgs) {
     return $ModifiedParams
 }
 
+#Validates data based on similar guidelines that are used in UserInputToParameters
+Function IsDataValid($ArrayToValidate) { #Checks that Location Name, Employee Number and Name are valid
+    $MyBool = 1 #start as true
+    if ($ArrayToValidate[0].Length -ne 3 -or $ArrayToValidate[0] -match "^\d+$" -eq 0) {
+        $MyBool = 0
+    }
+    if ($ArrayToValidate[1].Length -ne 4 -or $ArrayToValidate[1] -match "^\d+$" -eq 0) {
+        $MyBool = 0
+    }
+    if ($ArrayToValidate[2] -match "-" -eq 1) { 
+        $MyBool = 0
+    }
+    #will add validation for job titles at some point...
+    return $MyBool
+}
+
 #Prints output of the 4 variables obtained from the earlier steps. 
 #Returns Boolean that indicates if the input looks correct to the user.
 Function ConfirmInputCorrect($ModifiedParams) {
@@ -292,11 +304,80 @@ Function ConfirmInputCorrect($ModifiedParams) {
         Write-Host("Invalid Input. Enter (y/n)`n") -ForegroundColor Red
     }
     return $UserInput
-} 
+}
+
+#This function allows a user to modify a specific portion of the data after they have pasted the template.
+#Normally this will never be run, but in case there is a typo, the user can manually re-renter the data.
+Function ModifyData($ModifiedParams) {
+    Clear-Host
+    $IncorrectIndex = -1 #start with the index as -1 to indicate we haven't entered the while loop
+    $Arg1 = $ModifiedParams[0]
+    $Arg2 = $ModifiedParams[1]
+    $Arg3 = $ModifiedParams[2]
+    $Arg4 = $ModifiedParams[3]
+    While(1) {
+        if ($IncorrectIndex -eq -1) { #if we are on the first iteration of the while loop.
+            Write-Host "[1]: Location Number: $Arg1"
+            Write-Host "[2]: Employee Number: $Arg2"
+            Write-Host "[3]: User Name: $Arg3"
+            Write-Host "[4]: Job Title: $Arg4"
+            Write-Host "What is not correct? Enter the number" -ForegroundColor Cyan
+            try { [int32]$IncorrectIndex = Read-Host } #put in a try catch so we can interpret the input as an int later.
+            catch { #if the user didn't enter an integer.
+                Write-Host "Must enter a number..." -ForegroundColor Red
+                Start-Sleep 1
+                Clear-Host
+                continue #prompt again
+            }
+            if ($IncorrectIndex -lt 1 -or $IncorrectIndex -gt 4) { #if the user entered a number that isn't 1-4
+                Write-Host "Invalid Input enter a number 1-4" -ForegroundColor Red
+                Start-Sleep 1
+                Clear-Host
+                continue #prompt again
+            }
+        }
+        else { #now that the input is valid...
+            switch ($IncorrectIndex) { #assign the new value based on the index.
+                1 { $ModifiedParams[0] = Read-Host -Prompt ("Enter the correct Location Code") }
+                2 { $ModifiedParams[1] = Read-Host -Prompt ("Enter the correct Employee Number") }
+                3 { $ModifiedParams[2] = Read-Host -Prompt ("Enter the correct User Name") }
+                4 { $ModifiedParams[3] = Read-Host -Prompt ("Enter the correct Job Title") }
+            }
+            #it is safe to run IsDataValid because we already ran it once before, the only thing that could possibly be changed is the new data from this func.
+            if (IsDataValid($ModifiedParams) -eq 1) { #if the new data the user entered is valid, break out of the while loop.
+                break
+            }
+            else { #if for some reason the data is still not valid after the user enters it again...
+                switch ($IncorrectIndex) { #display that the new input is not valid.
+                    1 { Write-Host "Location Code not in valid format" -ForegroundColor Red }
+                    2 { Write-Host "Employee Number not in valid format" -ForegroundColor Red }
+                    3 { Write-Host "User Name not in valid format" -ForegroundColor Red }
+                    4 { Write-Host "Job Title not in valid format" -ForegroundColor Red }
+                }
+                Start-Sleep 1.5
+                Clear-Host
+                continue #on the next iteration, we will not prompt the user for the invalid index, since we know what it is.
+            }
+        }
+    }
+
+}
+
+#Abstracts the calling of new Powershell script to this function.
+Function CallNewPSScript($ModifiedParams) {
+    $Arg1 = $ModifiedParams[0]
+    $Arg2 = $ModifiedParams[1]
+    $Arg3 = $ModifiedParams[2]
+    $Arg4 = $ModifiedParams[3]
+    $ArgumentList = "-LocNum $Arg1 -EmpNum $Arg2 -Name `"$Arg3`" -JobTitle `"$Arg4`""
+    $ScriptPath= $PSScriptRoot+"\test.ps1"
+    Invoke-Expression "& `"$ScriptPath`" $ArgumentList" #jump to new script, passing the validated data
+}
 
 #Main function -- Don't need this to be a function. Just my preference
 #This function controls the program flow and calls the new user script after data has been validated.
 Function Main { 
+    SetupEnvironment
     Write-Host ("============================================================================") -ForegroundColor Yellow
     Write-Host ("`n================================= NEW HIRE =================================`n") -ForegroundColor Yellow
     Write-Host ("============================================================================`n") -ForegroundColor Yellow
@@ -313,19 +394,24 @@ Function Main {
         }
         $Proceed = ConfirmInputCorrect($ModifiedParams) #get new value for proceed y if user selects y, n if user selects n. Will loop until 
         if ($Proceed -eq 'y' -or $Proceed -eq 'Y') {
-            $Arg1 = $ModifiedParams[0]
-            $Arg2 = $ModifiedParams[1]
-            $Arg3 = $ModifiedParams[2]
-            $Arg4 = $ModifiedParams[3]
-            $ArgumentList = "-LocNum $Arg1 -EmpNum $Arg2 -Name `"$Arg3`" -JobTitle `"$Arg4`""
-            $ScriptPath= $PSScriptRoot+"\test.ps1"
-            Invoke-Expression "& `"$ScriptPath`" $ArgumentList" #jump to new script, passing the validated data
-            cmd /c pause
-            exit
+            CallNewPSScript($ModifiedParams) #execute new script
+            cmd /c pause 
+            exit 
         }
         elseif ($Proceed -eq 'N' -or $Proceed -eq 'n') { 
-            Clear-Host
-            continue
+            While (1) { #loop until user says it's correct
+                ModifyData($ModifiedParams) #allows the user to modify the data.
+                $Proceed = ConfirmInputCorrect($ModifiedParams) #now that the data has been modified, confirm once again that the input is correct
+                if ($Proceed -eq 'Y' -or $Proceed -eq 'y') {
+                    break
+                }
+                else { #if the input is not correct, jump into the first line of while loop and run ModifyData again.
+                    continue
+                }
+            }
+            CallNewPSScript($ModifiedParams) #execute new script
+            cmd /c pause
+            exit
         }
         else {
             Write-Host "Proceed is not y or n...something is wrong...`nExiting"
