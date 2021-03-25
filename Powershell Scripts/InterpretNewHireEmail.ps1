@@ -189,24 +189,11 @@ Function UserInputToParameters ($UserInfoArgs) {
     return $ModifiedParams
 }
 
-#Validates data based on similar guidelines that are used in UserInputToParameters
-Function IsDataValid($ArrayToValidate) { #Checks that Location Name, Employee Number and Name are valid
-    $MyBool = 1 #start as true
-    $LocValid = ValidateLocationCode($ArrayToValidate[0]) #validates Location code again
-    $EmpValid = ValidateEmployeeID($ArrayToValidate[1]) #validates Employee ID again
-    $NameValid = ValidateUserName($ArrayToValidate[2]) #validates Name again
-    $JobValid = ValidateJobTitle($ArrayToValidate[3]) #validates Job Title again
-    if ($null -eq $LocValid -or $null -eq $EmpValid -or $null -eq $NameValid -or $null -eq $JobValid) { 
-        $MyBool = 0
-    }
-    return $MyBool
-}
-
 #Prints output of the 4 variables obtained from the earlier steps. 
 #Returns Boolean that indicates if the input looks correct to the user.
 Function ConfirmInputCorrect($ModifiedParams) {
     while(1) {
-        Write-Host("Data Parsed:`n ") -ForegroundColor Cyan
+        Write-Host("User's Information:`n ") -ForegroundColor Cyan
         for ($i = 0; $i -lt 4; $i++) {
             switch ($i) {
                 0 { $ToPrint = $ModifiedParams[$i]
@@ -265,33 +252,37 @@ Function ModifyData($ModifiedParams) {
                 continue #prompt again
             }
         }
-        else { #now that the input is valid...
-            switch ($IncorrectIndex) { #assign the new value based on the index.
-                1 { $ModifiedParams[0] = Read-Host -Prompt ("Enter the correct Location Code") }
-                2 { $ModifiedParams[1] = Read-Host -Prompt ("Enter the correct Employee Number") }
-                3 { $ModifiedParams[2] = Read-Host -Prompt ("Enter the correct User Name") }
-                4 { $ModifiedParams[3] = Read-Host -Prompt ("Enter the correct Job Title") }
+        else { #now that the user's first input is valid...
+            switch ($IncorrectIndex) { #assign the new value based on the index. Then update Args with validated input
+                1 { 
+                    $InputCode = Read-Host -Prompt ("Enter the correct Location Code") 
+                    $ValidatedCode = ValidateLocationCode($InputCode) #performs validation
+                    $ModifiedParams[0] = $ValidatedCode #assign it to the array we modify
+                    $Arg1 = $ModifiedParams[0] #update to print properly on next iteration
+                }
+                2 {  
+                    $InputNum = Read-Host -Prompt ("Enter the correct Employee Number") 
+                    $ValidatedEmpNum = ValidateEmployeeID($InputNum) #performs validation
+                    $ModifiedParams[1] = $ValidatedEmpNum #assign it to the array we modify
+                    $Arg2 = $ModifiedParams[1] #update to print properly on next iteration
+                }
+                3 { 
+                    $InputName = Read-Host -Prompt ("Enter the correct User Name")
+                    $ValidatedName = ValidateUserName($InputName) #performs validation
+                    $ModifiedParams[2] = $ValidatedName #assign it to the array we modify
+                    $Arg3 = $ModifiedParams[2] #update to print properly on next iteration
+                }
+                4 { 
+                    $InputJobTitle = Read-Host -Prompt ("Enter the correct Job Title") 
+                    $ValidatedJobTitle = ValidateJobTitle($InputJobTitle) #performs validation
+                    $ModifiedParams[3] = $ValidatedJobTitle #assign it to the array we modify
+                    $Arg4 = $ModifiedParams[3] #update to print properly on next iteration
+                }
                 5 { return 1 } #1 will show that user wanted to re enter the entire template.
             }
-            #it is safe to run IsDataValid because we already ran it once before, the only thing that could possibly be changed is the new data from this func.
-            if (IsDataValid($ModifiedParams) -eq 1) { #if the new data the user entered is valid, break out of the while loop.
-                return 0 #0 means 
-            }
-            #TODO
-            else { #if for some reason the data is still not valid after the user enters it again...
-                switch ($IncorrectIndex) { #display that the new input is not valid.
-                    1 { Write-Host "Location Code not in valid format" -ForegroundColor Red }
-                    2 { Write-Host "Employee Number not in valid format" -ForegroundColor Red }
-                    3 { Write-Host "User Name not in valid format" -ForegroundColor Red }
-                    4 { Write-Host "Job Title not in valid format" -ForegroundColor Red }
-                }
-                Start-Sleep 1.5
-                Clear-Host
-                continue #on the next iteration, we will not prompt the user for the invalid index, since we know what it is.
-            }
+            break #leave the loop
         }
     }
-
 }
 
 #Calls New Powershell script to this function.
@@ -328,8 +319,8 @@ Function ValidateLocationCode ($LocationCode) {
             break
         }
         else {
-            Write-Host "ERROR -- That Location Code doesn't exist. Please enter a valid Location Code" -ForegroundColor Red
-            $LocationCode = Read-Host
+            Write-Host "ERROR -- That Location Code doesn't exist." -ForegroundColor Red
+            $LocationCode = Read-Host -Prompt "Please enter a valid Location Code"
         }
     }
     return $LocationCode
@@ -341,7 +332,7 @@ Function ValidateEmployeeID ($EmployeeID) {
     $EmployeeID = $EmployeeID.Replace("EmployeeNumber:","")
     While (1) {
         if ($EmployeeID -match "^\d+$" -eq 0 -or $EmployeeID.length -gt 5) { #checks for length and ensures it is numeric and less than 6 chars
-            Write-Host ("`nERROR, Employee ID contains non numeric characters`n") -ForegroundColor Red
+            Write-Host ("`nERROR, Employee ID contains non numeric characters or is greater than 5 characters`n") -ForegroundColor Red
             $EmployeeID = Read-Host -Prompt ("Enter the correct Employee ID")
             continue
         }
@@ -406,7 +397,7 @@ Function ValidateJobTitle ($JobTitle) {
     Write-Host ""
     $JobTitle = $JobTitle.Replace("Job Title: ","")
     Try {
-        Write-Host "`nReading in Job Titles from the Access Matrix Spreadsheet to validate job title..." -ForegroundColor Cyan
+        #Write-Host "`nReading in Job Titles from the Access Matrix Spreadsheet to validate job title..." -ForegroundColor Cyan
         $AccessMatrixFile = Import-Excel \\Tech\Admin\02-ServiceDesk\Scripts\Davis\AccessFormMatrixCopy.xlsm -WorksheetName RawSecurity #Load the RawSecurity Worksheet
     }
     Catch {
@@ -414,7 +405,7 @@ Function ValidateJobTitle ($JobTitle) {
         cmd /c pause
         exit
     }
-    Write-Host "Read Data From Access Matrix Successfully.`n`n" -ForegroundColor Green
+    #Write-Host "Read Data From Access Matrix Successfully.`n`n" -ForegroundColor Green
     $JobTitleArray = $AccessMatrixFile."Job Titles"
     While (1) { #infinite loop
         if ($JobTitleArray.Contains($JobTitle)) {
@@ -424,6 +415,9 @@ Function ValidateJobTitle ($JobTitle) {
             return $JobTitle
         }
         elseif ($JobTitle -match "Retail Stocker/Ecomm") { #if the job contains Retail Stocker, the endings are not entered in access matrix so we can't perfectly validate
+            return $JobTitle
+        }
+        elseif ($JobTitle -match "Retail Area Specialist") { #if the job contains Retail Area Specialist, the endings are not entered in access matrix so we can't perfectly validate
             return $JobTitle
         }
         Write-Host "`nERROR -- That Job Title doesn't exist. Please enter a valid Job Title.`n" -ForegroundColor Red
