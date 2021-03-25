@@ -1,16 +1,15 @@
 #============================================================================================
 #Improvement Ideas:
 
-#   Allow Employee Number to be 1,2,3,4, or 5 digits
-#   Refactor UserInputToParameters into several functions. Probably one function for each line
-#   Validate Job Titles -- maybe with excel import
+#   All done! Now just test thoroughly
 
 #============================================================================================
 
 #Taken from New_User_Script_2020 -- This makes the screen black if we are in an elevated shell
+#Added the two imports for the requires modules
 Function SetupEnvironment {
-    
-
+    Import-Module ImportExcel
+    Import-Module ActiveDirectory
     $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
     $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
 
@@ -75,6 +74,11 @@ Function ValidateInput ($UserInfoArgs) {
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) { #If a line is not valid or doesn't contain what we are looking for. Remove it from the list entirely and decrement counter
         while ($UserInfoArgs[$i] -match "  ") { #while there are duplicate spaces in the current line   
             $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("  "," ") #remove duplicate spaces if there are typos
+        }
+        $StrLen = $UserInfoArgs[$i].length
+        $Temp = $UserInfoArgs[$i]
+        if ($Temp[$StrLen - 1] -eq " ") { #If the last char in the string is a space, remove it.
+            $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, ($StrLen - 1))
         }
         if ($i -eq 0 -and ($UserInfoArgs[$i] -Match "Dept" -eq 0 -or $UserInfoArgs[$i] -Match "Location" -eq 0)) { #validate first line
             $UserInfoArgs.Remove($UserInfoArgs[$i])
@@ -150,103 +154,29 @@ Function ValidateInput ($UserInfoArgs) {
 #This should be refactored at some point.
 Function UserInputToParameters ($UserInfoArgs) { 
     $ModifiedParams = [System.Collections.ArrayList]@()
-    $IsAddedLoc = 0 #flag to keep track of whether the location has already been added
-    $IsAddedEmp = 0 #flag to keep track of whether the Employee num has already been added
-    $IsAddedPrefNameEmail = 0 #flag to keep track of whether the pref email name has already been added
     for ($i = 0; $i -lt $UserInfoArgs.Count; $i++) {
-        #================= Location Code Validation -- Should Make this a function at some point ================= 
-        if ($i -eq 0) { 
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces 
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Dept/Location:","") #remove text before location num
-            if ($IsAddedLoc -eq 0) { #there won't be a / if we re-entered it
-                $IndexOfSlash = $UserInfoArgs[$i].IndexOf("/")
-                $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0,$IndexOfSlash)
-            }
-            if ($UserInfoArgs[$i].Length -ne 3 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
-                Write-Host ("`nERROR, Location Code is not 3 digits or contains non numeric characters.") -ForegroundColor Red
-                $UserInfoArgs[$i] = Read-Host -Prompt ("Enter the correct Location Code")
-                if ($IsAddedLoc -eq 1) {
-                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value if it has already been added
-                }
-                else {
-                    $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
-                }
-                $i-- #decrement i so we will validate this again.
-                $IsAddedLoc = 1 #set the flag to know we have already added this value -- don't add again
-                continue
-            }
-            elseif ($IsAddedLoc -eq 0) { #only add if the flag is false
-                $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+        if ($i -eq 0) { #================= Location Code Validation =================
+            $LocationCode = ValidateLocationCode($UserInfoArgs[$i])
+            $ModifiedParams.Add($LocationCode) | Out-Null #Prevent adding integers to the arraylist
+        }
+        if ($i -eq 1) { #================= Employee Number Validation =================
+            $EmployeeID = ValidateEmployeeID($UserInfoArgs[$i]) #validates the employee ID
+            $ModifiedParams.Add($EmployeeID) | Out-Null #Prevent adding integers to the arraylist
+        }
+        if ($i -eq 2) {  #================= User Name Validation =================
+            $UserName = ValidateUserName($UserInfoArgs[$i])
+            $ModifiedParams.Add($UserName) | Out-Null #Prevent adding integers to the arraylist
+        }
+        if ($i -eq 3) { #================= Preferred Name for Email Validation =================
+            $EmailName = ValidateEmailName($UserInfoArgs[$i]) #validates email by checking user user existence in AD returns null if nothing entered.
+            if ($null -ne $EmailName) { #IF there is a preferred name for email change the user name
+                $NewNameForEmail = ValidateUserName($EmailName) #ensure this user doesn't already exist in AD.
+                $ModifiedParams[$i-1] = $NewNameForEmail #set the user name to the preferred name for email.
             }
         }
-        #================= End Of Location Code Validation =================
-
-
-        #================= Employee Number Validation -- Should Make this a function at some point ================= 
-        if ($i -eq 1) { 
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove all spaces
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("EmployeeNumber:","")
-            if ($UserInfoArgs[$i].Length -ne 4 -or $UserInfoArgs[$i] -match "^\d+$" -eq 0) { #checks for length and ensures it is numeric.
-                Write-Host ("`nERROR, Employee ID is not 4 digits or contains non numeric characters.`n") -ForegroundColor Red
-                $UserInfoArgs[$i] = Read-Host -Prompt ("Enter the correct Employee ID")
-                if ($IsAddedEmp -eq 1) {
-                    $ModifiedParams[$i] = ($UserInfoArgs[$i]) #replace past value if it has already been added
-                }
-                else {
-                    $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null
-                }
-                $i-- #decrement i so we will validate this again.
-                $IsAddedEmp = 1 #set the flag to know we have already added this value -- don't add again
-                continue
-            }
-            elseif ($IsAddedEmp -eq 0) { #only add if the flag is false
-                $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
-            }
-            
-        }
-        #================= End Of Employee Number Validation =================
-
-
-        #================= User Name Validation -- Should Make this a function at some point =================
-        if ($i -eq 2) { 
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("User Name: ","") 
-            if ($UserInfoArgs[$i] -match "-" -eq 1) { #if there is multiple last name. Only use the first.
-                $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('-'))
-            }
-            $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
-        }
-        #================= End Of User Name Validation =================
-
-
-        #================= Preferred Name for Email Validation -- Should Make this a function at some point =================
-        if ($i -eq 3) { 
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace(" ","") #Remove spaces if they exist
-            if ($UserInfoArgs[$i] -eq "PreferredNameforEmail:" -or $UserInfoArgs[$i] -eq "") {
-                continue
-            }
-            else {
-                $LengthAfterDotRemoval = $UserInfoArgs[$i].replace(".","").Length
-                if (($UserInfoArgs[$i] -match "@wilco.coop" -eq 0 -and ($UserInfoArgs[$i] -match "@hazelnut.com" -eq 0)) -or ($UserInfoArgs[$i].Length - ($LengthAfterDotRemoval) -ne 2)) { #ensures there are 2 periods, and there is an @wilco.coop
-                    Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.") -ForegroundColor Red
-                    Write-Host ("`nFormat is: FirstName.LastName@wilco.coop`nPress enter if there isn't a preferred email:") -ForegroundColor White
-                    $UserInfoArgs[$i] = Read-Host -Prompt ("Enter preferred name for email")
-                    $i-- #decrement i
-                    continue
-                }
-                elseif ($IsAddedPrefNameEmail -eq 0) { #only add if the flag is false
-                    $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("PreferredNameforEmail:","")
-                    $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("."," ") #Replace . with space to fit name format    
-                    $UserInfoArgs[$i] = $UserInfoArgs[$i].SubString(0, $UserInfoArgs[$i].IndexOf('@'))
-                    $ModifiedParams[2] = $UserInfoArgs[$i] # set name to be the email name for easier AD modifications after the script is ran           
-                }
-            }
-        }
-        #================= End Of Preferred Name for Email Validation =================
-
-        
-        if ($i -eq 4) {
-            $UserInfoArgs[$i] = $UserInfoArgs[$i].Replace("Job Title: ","")
-            $ModifiedParams.Add($UserInfoArgs[$i]) | Out-Null #prevent adding integers to the arraylist
+        if ($i -eq 4) { #================= Job Title Validation =================
+            $ValidatedJob = ValidateJobTitle($UserInfoArgs[$i]) #validates job title based off access matrix spreadsheet
+            $ModifiedParams.Add($ValidatedJob) | Out-Null #Prevent adding integers to the arraylist
             break; 
         }
     }
@@ -262,16 +192,13 @@ Function UserInputToParameters ($UserInfoArgs) {
 #Validates data based on similar guidelines that are used in UserInputToParameters
 Function IsDataValid($ArrayToValidate) { #Checks that Location Name, Employee Number and Name are valid
     $MyBool = 1 #start as true
-    if ($ArrayToValidate[0].Length -ne 3 -or $ArrayToValidate[0] -match "^\d+$" -eq 0) {
+    $LocValid = ValidateLocationCode($ArrayToValidate[0]) #validates Location code again
+    $EmpValid = ValidateEmployeeID($ArrayToValidate[1]) #validates Employee ID again
+    $NameValid = ValidateUserName($ArrayToValidate[2]) #validates Name again
+    $JobValid = ValidateJobTitle($ArrayToValidate[3]) #validates Job Title again
+    if ($null -eq $LocValid -or $null -eq $EmpValid -or $null -eq $NameValid -or $null -eq $JobValid) { 
         $MyBool = 0
     }
-    if ($ArrayToValidate[1].Length -ne 4 -or $ArrayToValidate[1] -match "^\d+$" -eq 0) {
-        $MyBool = 0
-    }
-    if ($ArrayToValidate[2] -match "-" -eq 1) { 
-        $MyBool = 0
-    }
-    #will add validation for job titles at some point...
     return $MyBool
 }
 
@@ -321,6 +248,7 @@ Function ModifyData($ModifiedParams) {
             Write-Host "[2]: Employee Number: $Arg2"
             Write-Host "[3]: User Name: $Arg3"
             Write-Host "[4]: Job Title: $Arg4"
+            Write-Host "[5]: Re-enter the entire email from HR"
             Write-Host "What is not correct? Enter the number" -ForegroundColor Cyan
             try { [int32]$IncorrectIndex = Read-Host } #put in a try catch so we can interpret the input as an int later.
             catch { #if the user didn't enter an integer.
@@ -329,10 +257,11 @@ Function ModifyData($ModifiedParams) {
                 Clear-Host
                 continue #prompt again
             }
-            if ($IncorrectIndex -lt 1 -or $IncorrectIndex -gt 4) { #if the user entered a number that isn't 1-4
+            if ($IncorrectIndex -lt 1 -or $IncorrectIndex -gt 5) { #if the user entered a number that isn't 1-4
                 Write-Host "Invalid Input enter a number 1-4" -ForegroundColor Red
                 Start-Sleep 1
                 Clear-Host
+                $IncorrectIndex = -1
                 continue #prompt again
             }
         }
@@ -342,11 +271,13 @@ Function ModifyData($ModifiedParams) {
                 2 { $ModifiedParams[1] = Read-Host -Prompt ("Enter the correct Employee Number") }
                 3 { $ModifiedParams[2] = Read-Host -Prompt ("Enter the correct User Name") }
                 4 { $ModifiedParams[3] = Read-Host -Prompt ("Enter the correct Job Title") }
+                5 { return 1 } #1 will show that user wanted to re enter the entire template.
             }
             #it is safe to run IsDataValid because we already ran it once before, the only thing that could possibly be changed is the new data from this func.
             if (IsDataValid($ModifiedParams) -eq 1) { #if the new data the user entered is valid, break out of the while loop.
-                break
+                return 0 #0 means 
             }
+            #TODO
             else { #if for some reason the data is still not valid after the user enters it again...
                 switch ($IncorrectIndex) { #display that the new input is not valid.
                     1 { Write-Host "Location Code not in valid format" -ForegroundColor Red }
@@ -363,7 +294,7 @@ Function ModifyData($ModifiedParams) {
 
 }
 
-#Abstracts the calling of new Powershell script to this function.
+#Calls New Powershell script to this function.
 Function CallNewPSScript($ModifiedParams) {
     $Arg1 = $ModifiedParams[0]
     $Arg2 = $ModifiedParams[1]
@@ -374,6 +305,131 @@ Function CallNewPSScript($ModifiedParams) {
     Invoke-Expression "& `"$ScriptPath`" $ArgumentList" #jump to new script, passing the validated data
 }
 
+#Imports an Excel Sheet that has a column with all the location codes.
+Function ValidateLocationCode ($LocationCode) {
+    Write-Host ""
+    $LocationCode = $LocationCode.Replace(" ","") #Remove all spaces 
+    $LocationCode = $LocationCode.Replace("Dept/Location:","") #remove text before location num
+    $IndexOfSlash = $LocationCode.IndexOf("/")
+    if ($IndexOfSlash -ne -1) { #if there is a slash then do this.
+        $LocationCode = $LocationCode.SubString(0,$IndexOfSlash)
+    }
+    Try {
+        $LocCodeFile = Import-Excel \\Tech\Admin\02-ServiceDesk\Scripts\Davis\LocationCodes.xlsx
+    }
+    Catch {
+        Write-Host "ERROR -- Could not read file. Script Exiting" -ForegroundColor Red
+        cmd /c pause
+        exit
+    }
+    $LocationCodeArray = $LocCodeFile."Location Codes"
+    While (1) { #ask for location code until it is correct
+        if ($LocationCodeArray.Contains($LocationCode)) {
+            break
+        }
+        else {
+            Write-Host "ERROR -- That Location Code doesn't exist. Please enter a valid Location Code" -ForegroundColor Red
+            $LocationCode = Read-Host
+        }
+    }
+    return $LocationCode
+}
+
+#Validates EmployeeID by checking in AD if the Employee ID exists, and making sure numeric characters less than 6 digits only
+Function ValidateEmployeeID ($EmployeeID) {
+    $EmployeeID = $EmployeeID.Replace(" ","") #Remove all spaces
+    $EmployeeID = $EmployeeID.Replace("EmployeeNumber:","")
+    While (1) {
+        if ($EmployeeID -match "^\d+$" -eq 0 -or $EmployeeID.length -gt 5) { #checks for length and ensures it is numeric and less than 6 chars
+            Write-Host ("`nERROR, Employee ID contains non numeric characters`n") -ForegroundColor Red
+            $EmployeeID = Read-Host -Prompt ("Enter the correct Employee ID")
+            continue
+        }
+        $UserTest = Get-ADUser -Filter {employeeID -eq $EmployeeID}
+        if ($null -ne $UserTest) {
+            Write-Host "User Already exists in AD." -ForegroundColor Red
+            $EmployeeID = Read-Host -Prompt ("Enter the correct Employee ID")
+            continue
+        }
+        else {
+            return $EmployeeID
+        }
+    }
+}
+
+#checks in AD to ensure the user doesn't already exist.
+Function ValidateUserName ($UserName) {
+    $UserName= $UserName.Replace("User Name: ","") 
+    if ($UserName -match "-" -eq 1) { #if there is multiple last name. Only use the first.
+        $UserName = $UserName.SubString(0, $UserName.IndexOf('-'))
+    }
+    $UserTest = Get-ADUser -Filter {Name -eq $UserName} #check if user exists. This was taken from New_User_Script_2020.ps1
+    if ($null -ne $UserTest) { #if a user exists with this name
+        Write-Host "User Already exists in AD. Exiting..." -ForegroundColor Red
+        cmd /c pause
+        exit
+    }
+    else {
+        return $UserName
+    }
+}
+
+#Validates email name and retuns null if there is no entry.
+#If there is an entry, it will ensure the user doens't exist in AD already.
+Function ValidateEmailName ($EmailName) {
+    $EmailName = $EmailName.Replace(" ","") #Remove spaces if they exist
+    while (1) {
+        if ($EmailName -eq "PreferredNameforEmail:" -or $EmailName -eq "") {
+            return $null
+        }
+        else {
+            $LengthAfterDotRemoval = $EmailName.replace(".","").Length
+            if (($EmailName -match "@wilco.coop" -eq 0 -and ($EmailName -match "@hazelnut.com" -eq 0)) -or ($EmailName.Length - ($LengthAfterDotRemoval) -ne 2)) { #ensures there are 2 periods, and there is an @wilco.coop or a @hazelnut.com
+                Write-Host ("`nERROR, Invalid Format to Preferred Name for Email.") -ForegroundColor Red
+                Write-Host ("`nFormat is: FirstName.LastName@wilco.coop or FirstName.LastName@hazelnut.com`nPress enter if there isn't a preferred email") -ForegroundColor White
+                $EmailName = Read-Host -Prompt ("Enter preferred name for email")
+                continue
+            }
+            else { #if the format is valid
+                $EmailName = $EmailName.Replace("PreferredNameforEmail:","")
+                $EmailName = $EmailName.Replace("."," ") #Replace . with space to fit name format    
+                $EmailName = $EmailName.SubString(0, $EmailName.IndexOf('@'))
+                return $EmailName       
+            }
+        }
+    }
+}
+
+#Imports the access matrix excel sheet with all the valid Job titles.
+#Makes exceptions for jobs like Retail Stocker/Ecomm or Retail Salesperson - DEPTName
+Function ValidateJobTitle ($JobTitle) {
+    Write-Host ""
+    $JobTitle = $JobTitle.Replace("Job Title: ","")
+    Try {
+        Write-Host "`nReading in Job Titles from the Access Matrix Spreadsheet to validate job title..." -ForegroundColor Cyan
+        $AccessMatrixFile = Import-Excel \\Tech\Admin\02-ServiceDesk\Scripts\Davis\AccessFormMatrixCopy.xlsm -WorksheetName RawSecurity #Load the RawSecurity Worksheet
+    }
+    Catch {
+        Write-Host "ERROR -- Could not read file. Exiting" -ForegroundColor Red
+        cmd /c pause
+        exit
+    }
+    Write-Host "Read Data From Access Matrix Successfully.`n`n" -ForegroundColor Green
+    $JobTitleArray = $AccessMatrixFile."Job Titles"
+    While (1) { #infinite loop
+        if ($JobTitleArray.Contains($JobTitle)) {
+            return $JobTitle
+        }
+        elseif ($JobTitle -match "Retail Salesperson") { #if the job contains Retail Salesperson, the endings are not entered in access matrix so we can't perfectly validate
+            return $JobTitle
+        }
+        elseif ($JobTitle -match "Retail Stocker/Ecomm") { #if the job contains Retail Stocker, the endings are not entered in access matrix so we can't perfectly validate
+            return $JobTitle
+        }
+        Write-Host "`nERROR -- That Job Title doesn't exist. Please enter a valid Job Title.`n" -ForegroundColor Red
+        $JobTitle = Read-Host
+    }
+}
 #Main function -- Don't need this to be a function. Just my preference
 #This function controls the program flow and calls the new user script after data has been validated.
 Function Main { 
@@ -382,6 +438,7 @@ Function Main {
     Write-Host ("`n================================= NEW HIRE =================================`n") -ForegroundColor Yellow
     Write-Host ("============================================================================`n") -ForegroundColor Yellow
     $Proceed = 'N'
+    $Result = 0 #This is used in the 2nd while loop, where we ask the user if they want to modify the data.
     while($Proceed -ne 'y' -or $Proceed -ne 'Y') { #loop forever until user says input is correct
         [System.Collections.ArrayList]$UserInfoData = GetUserInput #collects raw input, ignores blank & irrelevant lines. It also ensures there are at least 4 lines
         if ($UserInfoData.Count -lt 3) {
@@ -400,7 +457,10 @@ Function Main {
         }
         elseif ($Proceed -eq 'N' -or $Proceed -eq 'n') { 
             While (1) { #loop until user says it's correct
-                ModifyData($ModifiedParams) #allows the user to modify the data.
+                $Result = ModifyData($ModifiedParams) #allows the user to modify the data. if the function returns 1, the user opted to re-enter the template.
+                if ($Result -eq 1) {
+                    break #leave the loop. The user wants to re-enter the entire template.
+                }
                 $Proceed = ConfirmInputCorrect($ModifiedParams) #now that the data has been modified, confirm once again that the input is correct
                 if ($Proceed -eq 'Y' -or $Proceed -eq 'y') {
                     break
@@ -408,6 +468,9 @@ Function Main {
                 else { #if the input is not correct, jump into the first line of while loop and run ModifyData again.
                     continue
                 }
+            }
+            if ($Result -eq 1) { #if the user opted to re-enter the entire template
+                continue
             }
             CallNewPSScript($ModifiedParams) #execute new script
             cmd /c pause

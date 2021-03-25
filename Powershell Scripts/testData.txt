@@ -25,7 +25,7 @@ Employee Number:9999
 
 User Name: Johnny Appleseed  
 
-Preferred Name for Email:  Jim.Appleseed@wilco.coop
+Preferred Name for Email:  JimAppleseed@wilco.coop
 
 Job Title: Retail Warehouser
 
@@ -89,9 +89,9 @@ Employee Number:99299
 
 User Name: Johnny Appleseed  
 
-Preferred Name for Email:
+Preferred Name for Email: Davis.Henckel@wilco.coop
 
-Job Title: Retail Warehouser
+Job Title: Retail Salesperson - Lawn & Garden
 
 Start Date:  03/17/2021
 
@@ -107,7 +107,7 @@ User Name: Johnny Appleseed
 
 Preferred Name for Email: 
 
-Job Title: Retail Warehouser
+Job Title: Retail Manager A 
 
 Start Date:  03/17/2021
 
@@ -172,5 +172,82 @@ Start Date:  03/17/2021
 
 Requesting Manager: Jane Doe 
 
+============================================================ Extra space after job Title
 
- 
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email: 
+
+Job Title: Retail Manager A 
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe
+
+============================================================ Different Job Title
+
+Dept / Location: 553 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email: 
+
+Job Title: Retail Stocker/Ecomm
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe
+
+============================================================ Different Input
+
+Dept / Location: 533 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email: Davis.Henckel@wilco.coop
+
+Job Title: Retail Salesperson - Lawn & Garden
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe
+
+============================================================ Input with invalid preferred name for email
+
+Dept / Location: 533 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:  JimAppleseed@wilco.coop
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
+
+============================================================ Input with invalid preferred name for email
+
+Dept / Location: 5s3 / Gig Harbor
+
+Employee Number:9999
+
+User Name: Johnny Appleseed  
+
+Preferred Name for Email:  Jim.Appleseed@wilco.coop
+
+Job Title: Retail Warehouser
+
+Start Date:  03/17/2021
+
+Requesting Manager: Jane Doe 
